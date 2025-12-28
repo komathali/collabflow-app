@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { CheckCircle, BrainCircuit, GanttChartSquare, KanbanSquare } from 'lucide-react';
+import { CheckCircle, BrainCircuit, GanttChartSquare, KanbanSquare, Network } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -72,11 +72,16 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3 mt-12">
+            <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-2 mt-12">
               <div className="grid gap-1">
                 <KanbanSquare className="h-8 w-8 text-primary" />
                 <h3 className="text-lg font-bold">Project Views</h3>
                 <p className="text-sm text-muted-foreground">Visualize your work your way with dynamic Tables, Kanban boards, and Gantt charts.</p>
+              </div>
+              <div className="grid gap-1">
+                <Network className="h-8 w-8 text-primary" />
+                <h3 className="text-lg font-bold">Program Management</h3>
+                <p className="text-sm text-muted-foreground">Oversee multiple projects, track cross-team dependencies, and manage timelines.</p>
               </div>
               <div className="grid gap-1">
                 <CheckCircle className="h-8 w-8 text-primary" />
