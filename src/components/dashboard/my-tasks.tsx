@@ -1,9 +1,12 @@
+'use client';
 import { MOCK_TASKS } from "@/lib/data/mock-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListTodo, CheckCircle2, MoreHorizontal, Clock, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { TaskPriority } from "@/lib/types";
+import { useEffect, useState } from "react";
+import type { Task } from "@/lib/types";
 
 const priorityIcons: Record<TaskPriority, React.ReactNode> = {
   Urgent: <AlertCircle className="text-red-500" />,
@@ -19,9 +22,14 @@ const priorityColors: Record<TaskPriority, string> = {
     Low: "bg-blue-500/10 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 border-blue-500/20"
 };
 
-export default async function MyTasks() {
+export default function MyTasks() {
   // This will be replaced with a call to the data service to get tasks for the current user.
-  const tasks = MOCK_TASKS;
+  const [tasks, setTasks] = useState<Task[]>([]);
+  
+  useEffect(() => {
+    setTasks(MOCK_TASKS)
+  }, []);
+
   const openTasks = tasks.filter(t => t.status !== 'Done' && t.assigneeId === 'user-1');
 
   return (
