@@ -26,7 +26,7 @@ export default function MyAgenda() {
                     mode="single"
                     selected={date}
                     onSelect={setDate}
-                    className="rounded-md border p-0"
+                    className="rounded-md"
                 />
             </CardContent>
         </Card>
