@@ -24,7 +24,7 @@ export default function SignUpPage() {
     setError(null);
     try {
       await dataService.signUp(email, password, displayName);
-      router.push('/dashboard');
+      router.push('/');
     } catch (err: any) {
       setError(err.message || 'Failed to sign up.');
     }

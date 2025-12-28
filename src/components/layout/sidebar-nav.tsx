@@ -23,7 +23,7 @@ import Link from 'next/link';
 import { useDataService } from '@/hooks/useDataService';
 
 const menuItems = [
-  { href: '/dashboard', label: 'My Dashboard', icon: LayoutDashboard },
+  { href: '/', label: 'My Dashboard', icon: LayoutDashboard },
   { href: '/tasks', label: 'Tasks', icon: ListTodo },
   { href: '/board', label: 'Board', icon: KanbanSquare },
   { href: '/summary', label: 'AI Summary', icon: BrainCircuit },
@@ -37,12 +37,6 @@ export function SidebarNav() {
   const handleLogout = async () => {
     await dataService.logout();
     router.push('/login');
-  };
-
-  // Redirect / to /dashboard
-  const getActivePath = (path: string) => {
-    if (path === '/dashboard' && pathname === '/') return true;
-    return pathname.startsWith(path);
   };
   
   return (
@@ -62,7 +56,7 @@ export function SidebarNav() {
             <SidebarMenuItem key={item.href}>
               <Link href={item.href}>
                 <SidebarMenuButton
-                  isActive={getActivePath(item.href)}
+                  isActive={pathname === item.href}
                   tooltip={item.label}
                 >
                   <item.icon />
