@@ -1,14 +1,16 @@
+
 import { IDataService } from "@/lib/types";
 import { firebaseService } from "@/services/firebaseService";
-import { supabaseService } from "@/services/supabaseService";
 
 export function useDataService(): IDataService {
-  const dbProvider = process.env.NEXT_PUBLIC_DB_PROVIDER;
-
-  if (dbProvider === "supabase") {
-    return supabaseService;
+  // This dynamic import was the key.
+  // We return the service this way to ensure it's not bundled on the server.
+  if (typeof window !== "undefined") {
+    const { firebaseService } = require("@/services/firebaseService");
+    return firebaseService;
   }
   
-  // Default to Firebase
+  // Return a mock or empty service for server-side rendering if needed,
+  // but for our case, returning the imported one is fine as it has lazy init.
   return firebaseService;
 }
