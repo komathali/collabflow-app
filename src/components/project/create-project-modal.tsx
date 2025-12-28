@@ -47,6 +47,7 @@ export function CreateProjectModal({ isOpen, setIsOpen, onProjectCreated }: Crea
     resolver: zodResolver(projectSchema),
     defaultValues: {
       memberIds: [],
+      startDate: new Date(),
     },
   });
 
@@ -61,8 +62,16 @@ export function CreateProjectModal({ isOpen, setIsOpen, onProjectCreated }: Crea
     }
     if (isOpen) {
       fetchUsers();
+      form.reset({
+        name: '',
+        description: '',
+        framework: undefined,
+        memberIds: [],
+        startDate: new Date(),
+        endDate: undefined,
+      });
     }
-  }, [isOpen, dataService]);
+  }, [isOpen, dataService, form]);
 
   const onSubmit = async (values: ProjectFormValues) => {
     try {
