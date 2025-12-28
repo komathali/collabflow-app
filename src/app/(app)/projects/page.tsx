@@ -43,7 +43,6 @@ export default function ProjectsPage() {
     }, [dataService]);
 
     const onProjectCreated = (newProject: Project) => {
-        setProjects(prev => [...prev, newProject]);
         fetchProjects();
     }
 

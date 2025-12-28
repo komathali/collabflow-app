@@ -284,7 +284,8 @@ class FirebaseService implements IDataService {
         endDate: newProjectData.endDate,
     };
 
-    await this.logActivity('create', 'project', newProject.id, { projectName: newProject.name }, newProject.id);
+    const details = { projectName: newProject.name };
+    await this.logActivity('create', 'project', newProject.id, details, newProject.id);
   
     return newProject;
   }
@@ -628,7 +629,7 @@ class FirebaseService implements IDataService {
         action, // e.g., 'create', 'update'
         resourceType, // e.g., 'task', 'project'
         resourceId,
-        details, // Store rich context
+        details: details, // Store rich context
     });
   }
   
