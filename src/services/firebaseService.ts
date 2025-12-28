@@ -8,6 +8,7 @@ import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
   updateProfile,
+  Auth,
 } from "firebase/auth";
 import {
   getFirestore,
@@ -26,18 +27,33 @@ import {
   orderBy,
   Timestamp,
   collectionGroup,
-  limit
+  limit,
+  Firestore,
 } from "firebase/firestore";
 import { initializeFirebase } from "@/firebase";
 
 class FirebaseService implements IDataService {
-  private auth;
-  private firestore;
+  private _auth: Auth | null = null;
+  private _firestore: Firestore | null = null;
 
-  constructor() {
+  private get auth(): Auth {
+    if (!this._auth) {
+      this._initialize();
+    }
+    return this._auth!;
+  }
+
+  private get firestore(): Firestore {
+    if (!this._firestore) {
+      this._initialize();
+    }
+    return this._firestore!;
+  }
+
+  private _initialize() {
     const { auth, firestore } = initializeFirebase();
-    this.auth = auth;
-    this.firestore = firestore;
+    this._auth = auth;
+    this._firestore = firestore;
   }
 
   async login(email: string, password: string): Promise<FirebaseAuthUser | null> {
