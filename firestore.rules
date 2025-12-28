@@ -1,0 +1,180 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------
+
+    /**
+     * Returns true if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Returns true if the authenticated user's UID matches the provided userId.
+     * This is the foundation of the user-ownership model.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Returns true if the user is the owner and the document already exists.
+     * Used for safe update and delete operations.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+    
+    /**
+     * Retrieves the data for a given project document.
+     */
+    function getProjectData(projectId) {
+      return get(/databases/$(database)/documents/projects/$(projectId)).data;
+    }
+
+    /**
+     * Returns true if the user is an owner or member of a given project.
+     * This function performs a document read and is used to secure access to
+     * project subcollections and related top-level collections.
+     */
+    function isProjectMemberByGet(projectId) {
+      let projectData = getProjectData(projectId);
+      return isSignedIn() && (request.auth.uid == projectData.ownerId || request.auth.uid in projectData.memberIds);
+    }
+    
+    /**
+     * Returns true if the user is the owner of a given project.
+     * Performs a document read.
+     */
+    // function isProjectOwnerByGet(projectId) { // Removed unused function
+    //   let projectData = getProjectData(projectId);
+    //   return isSignedIn() && request.auth.uid == projectData.ownerId;
+    // }
+
+    /**
+     * Returns true if the user is an owner or member of a project,
+     * using data from a document that is currently being accessed (resource).
+     */
+    function isProjectMember(projectData) {
+      return isSignedIn() && (request.auth.uid == projectData.ownerId || request.auth.uid in projectData.memberIds);
+    }
+
+    /**
+     * Returns true if the user is the owner of a project, using data from
+     * a document that is currently being accessed (resource).
+     */
+    function isProjectOwner(projectData) {
+      return isSignedIn() && request.auth.uid == projectData.ownerId;
+    }
+    
+    /**
+     * Validates a project update. Members can update descriptive fields,
+     * but only the owner can change the owner or the member list.
+     */
+    function isUpdatingProjectSafely() {
+      // Check if ownership or membership fields are being changed
+      let membershipIsChanging = request.resource.data.ownerId != resource.data.ownerId || request.resource.data.memberIds != resource.data.memberIds;
+
+      // Allow the update if:
+      // 1. The user is a member AND membership is NOT changing.
+      // 2. The user is the owner (who can change anything).
+      return (isProjectMember(resource.data) && !membershipIsChanging) || isProjectOwner(resource.data);
+    }
+
+    // ------------------------------------------------------------------
+    // User Data
+    // ------------------------------------------------------------------
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Prevent listing all users
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if false; // User profiles are generally not deleted
+    }
+
+    match /users/{userId}/sticky_notes/{stickyNoteId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    // ------------------------------------------------------------------
+    // Project Data (Collaborative)
+    // ------------------------------------------------------------------
+    
+    match /projects/{projectId} {
+      allow get: if isProjectMember(resource.data);
+      allow list: if isSignedIn(); // Requires client-side query: where('memberIds', 'array-contains', auth.uid)
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid && request.auth.uid in request.resource.data.memberIds;
+      allow update: if resource != null && isUpdatingProjectSafely();
+      allow delete: if resource != null && isProjectOwner(resource.data);
+    }
+
+    match /projects/{projectId}/tasks/{taskId} {
+      allow get, list: if isProjectMemberByGet(projectId);
+      allow create: if isProjectMemberByGet(projectId) && request.resource.data.projectId == projectId;
+      allow update: if resource != null && isProjectMemberByGet(projectId) && request.resource.data.projectId == projectId;
+      allow delete: if resource != null && isProjectMemberByGet(projectId);
+    }
+
+    match /projects/{projectId}/tags/{tagId} {
+      allow get, list: if isProjectMemberByGet(projectId);
+      allow create: if isProjectMemberByGet(projectId);
+      allow update, delete: if resource != null && isProjectMemberByGet(projectId);
+    }
+    
+    match /projects/{projectId}/discussions/{discussionId} {
+      allow get, list: if isProjectMemberByGet(projectId);
+      allow create: if isProjectMemberByGet(projectId) && request.resource.data.projectId == projectId;
+      allow update, delete: if resource != null && isProjectMemberByGet(projectId);
+    }
+
+    match /projects/{projectId}/discussions/{discussionId}/comments/{commentId} {
+      allow get, list: if isProjectMemberByGet(projectId);
+      allow create: if isProjectMemberByGet(projectId) && request.resource.data.userId == request.auth.uid;
+      allow update: if resource != null && isProjectMemberByGet(projectId) && isOwner(resource.data.userId);
+      allow delete: if resource != null && isProjectMemberByGet(projectId) && isOwner(resource.data.userId);
+    }
+
+    match /projects/{projectId}/chat_messages/{chatMessageId} {
+      allow get, list: if isProjectMemberByGet(projectId);
+      allow create: if isProjectMemberByGet(projectId) && request.resource.data.senderId == request.auth.uid;
+      allow update: if resource != null && isProjectMemberByGet(projectId) && isOwner(resource.data.senderId);
+      allow delete: if resource != null && isProjectMemberByGet(projectId) && isOwner(resource.data.senderId);
+    }
+
+    match /projects/{projectId}/tasks/{taskId}/time_entries/{timeEntryId} {
+      allow get, list: if isProjectMemberByGet(projectId);
+      allow create: if isProjectMemberByGet(projectId) && request.resource.data.userId == request.auth.uid;
+      allow update: if resource != null && isProjectMemberByGet(projectId) && isOwner(resource.data.userId);
+      allow delete: if resource != null && isProjectMemberByGet(projectId) && isOwner(resource.data.userId);
+    }
+
+    // ------------------------------------------------------------------
+    // Collection Groups
+    // ------------------------------------------------------------------
+
+    match /activity_logs/{activityLogId} {
+      allow get: if getProjectData(resource.data.projectId).ownerId == request.auth.uid || request.auth.uid in getProjectData(resource.data.projectId).memberIds;
+      allow list: if false; // Secure default for collection groups
+      allow create: if false; // Should be created by backend triggers/functions
+      allow update: if false; // Logs are immutable
+      allow delete: if false; // Logs are immutable
+    }
+    
+    match /proofing_comments/{proofingCommentId} {
+      allow get: if getProjectData(resource.data.projectId).ownerId == request.auth.uid || request.auth.uid in getProjectData(resource.data.projectId).memberIds;
+      allow list: if false; // Secure default for collection groups
+      allow create: if getProjectData(request.resource.data.projectId).ownerId == request.auth.uid || request.auth.uid in getProjectData(request.resource.data.projectId).memberIds && request.resource.data.userId == request.auth.uid;
+      allow update: if resource != null && getProjectData(resource.data.projectId).ownerId == request.auth.uid || request.auth.uid in getProjectData(resource.data.projectId).memberIds && isOwner(resource.data.userId);
+      allow delete: if resource != null && getProjectData(resource.data.projectId).ownerId == request.auth.uid || request.auth.uid in getProjectData(resource.data.projectId).memberIds && isOwner(resource.data.userId);
+    }
+
+  }
+}

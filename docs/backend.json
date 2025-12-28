@@ -1,0 +1,667 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user within the CollabFlow application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "profilePictureUrl": {
+          "type": "string",
+          "description": "URL of the user's profile picture.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "displayName",
+        "email"
+      ]
+    },
+    "Project": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Project",
+      "type": "object",
+      "description": "Represents a project within the CollabFlow application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Project entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the project."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the project."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Project). The user ID of the project owner."
+        },
+        "memberIds": {
+          "type": "array",
+          "description": "References to Users. (Relationship: Project N:N User). List of user IDs who are members of the project.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "settings": {
+          "type": "string",
+          "description": "Project settings (e.g., color theme, notification preferences) stored as a JSON string."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "ownerId"
+      ]
+    },
+    "Task": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Task",
+      "type": "object",
+      "description": "Represents a task within a project.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Task entity."
+        },
+        "projectId": {
+          "type": "string",
+          "description": "Reference to Project. (Relationship: Project 1:N Task). The ID of the project this task belongs to."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the task."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the task."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the task (e.g., To-Do, In Progress, Done)."
+        },
+        "priority": {
+          "type": "string",
+          "description": "The priority of the task (e.g., High, Medium, Low)."
+        },
+        "dueDate": {
+          "type": "string",
+          "description": "The due date of the task.",
+          "format": "date-time"
+        },
+        "assigneeId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Task). The ID of the user assigned to the task."
+        },
+        "dependencyTaskIds": {
+          "type": "array",
+          "description": "References to Tasks. List of task IDs that this task depends on (Finish-to-Start dependency).",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tagIds": {
+          "type": "array",
+          "description": "References to Tags. (Relationship: Tag N:N Task). List of tag IDs associated with the task.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "customFields": {
+          "type": "string",
+          "description": "Custom fields for the task (e.g., text, number, currency, date) stored as a JSON string."
+        }
+      },
+      "required": [
+        "id",
+        "projectId",
+        "name",
+        "status"
+      ]
+    },
+    "Tag": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Tag",
+      "type": "object",
+      "description": "Represents a tag that can be associated with tasks.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Tag entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the tag."
+        },
+        "color": {
+          "type": "string",
+          "description": "The color associated with the tag (e.g., hex code)."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "ActivityLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ActivityLog",
+      "type": "object",
+      "description": "Represents an activity log entry.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ActivityLog entity."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The timestamp of the activity.",
+          "format": "date-time"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. The ID of the user who performed the action."
+        },
+        "projectId": {
+          "type": "string",
+          "description": "Reference to Project. The ID of the project the activity is related to."
+        },
+        "action": {
+          "type": "string",
+          "description": "The action that was performed (e.g., 'create', 'update', 'delete')."
+        },
+        "resourceType": {
+          "type": "string",
+          "description": "The type of resource the action was performed on (e.g., 'task', 'project', 'comment')."
+        },
+        "resourceId": {
+          "type": "string",
+          "description": "The ID of the resource the action was performed on."
+        },
+        "details": {
+          "type": "string",
+          "description": "Detailed information about the activity, stored as a JSON string."
+        }
+      },
+      "required": [
+        "id",
+        "timestamp",
+        "userId",
+        "action",
+        "resourceType",
+        "resourceId"
+      ]
+    },
+    "Discussion": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Discussion",
+      "type": "object",
+      "description": "Represents a discussion thread associated with a project.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Discussion entity."
+        },
+        "projectId": {
+          "type": "string",
+          "description": "Reference to Project. The ID of the project this discussion belongs to."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the discussion thread."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the discussion was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the discussion was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "projectId",
+        "title"
+      ]
+    },
+    "Comment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Comment",
+      "type": "object",
+      "description": "Represents a comment within a discussion thread.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Comment entity."
+        },
+        "discussionId": {
+          "type": "string",
+          "description": "Reference to Discussion. The ID of the discussion this comment belongs to."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. The ID of the user who posted the comment."
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the comment."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the comment was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "discussionId",
+        "userId",
+        "content"
+      ]
+    },
+    "ChatMessage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ChatMessage",
+      "type": "object",
+      "description": "Represents a chat message.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ChatMessage entity."
+        },
+        "senderId": {
+          "type": "string",
+          "description": "Reference to User. The ID of the user who sent the message."
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the message."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The timestamp when the message was sent.",
+          "format": "date-time"
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "URL of the file attached to the message (if any).",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "senderId",
+        "content",
+        "timestamp"
+      ]
+    },
+    "TimeEntry": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TimeEntry",
+      "type": "object",
+      "description": "Represents a time entry for tracking work hours.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the TimeEntry entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. The ID of the user who logged the time."
+        },
+        "taskId": {
+          "type": "string",
+          "description": "Reference to Task. The ID of the task the time was logged for."
+        },
+        "startTime": {
+          "type": "string",
+          "description": "The timestamp when the time entry started.",
+          "format": "date-time"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "The timestamp when the time entry ended.",
+          "format": "date-time"
+        },
+        "duration": {
+          "type": "number",
+          "description": "The duration of the time entry in hours."
+        },
+        "billable": {
+          "type": "boolean",
+          "description": "Indicates whether the time entry is billable."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "taskId",
+        "startTime",
+        "duration"
+      ]
+    },
+    "StickyNote": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "StickyNote",
+      "type": "object",
+      "description": "Represents a personal sticky note.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the StickyNote entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. The ID of the user who created the note."
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the sticky note."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the note was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the note was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "content"
+      ]
+    },
+    "ProofingComment": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ProofingComment",
+      "type": "object",
+      "description": "Represents a comment on a proofing document.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ProofingComment entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. The ID of the user who created the comment."
+        },
+        "documentId": {
+          "type": "string",
+          "description": "The ID of the document being proofed."
+        },
+        "x": {
+          "type": "number",
+          "description": "X coordinate of the comment on the document."
+        },
+        "y": {
+          "type": "number",
+          "description": "Y coordinate of the comment on the document."
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the comment."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the comment was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "documentId",
+        "x",
+        "y",
+        "content"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Path-based ownership ensures only the user can access their own profile.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/projects/{projectId}",
+        "definition": {
+          "entityName": "Project",
+          "schema": {
+            "$ref": "#/backend/entities/Project"
+          },
+          "description": "Stores project information. Includes denormalized 'ownerId' and 'memberIds' for authorization independence.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique identifier of the project."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/projects/{projectId}/tasks/{taskId}",
+        "definition": {
+          "entityName": "Task",
+          "schema": {
+            "$ref": "#/backend/entities/Task"
+          },
+          "description": "Stores tasks associated with a project. Includes denormalized 'ownerId' and 'memberIds' from the parent project for authorization independence.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique identifier of the project."
+            },
+            {
+              "name": "taskId",
+              "description": "The unique identifier of the task."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/projects/{projectId}/tags/{tagId}",
+        "definition": {
+          "entityName": "Tag",
+          "schema": {
+            "$ref": "#/backend/entities/Tag"
+          },
+          "description": "Stores tags associated with a project. Includes denormalized 'ownerId' and 'memberIds' from the parent project for authorization independence.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique identifier of the project."
+            },
+            {
+              "name": "tagId",
+              "description": "The unique identifier of the tag."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/activity_logs/{activityLogId}",
+        "definition": {
+          "entityName": "ActivityLog",
+          "schema": {
+            "$ref": "#/backend/entities/ActivityLog"
+          },
+          "description": "Stores activity logs for all projects. Includes 'userId' and 'projectId' for filtering and access control. Accessible via collection group query.",
+          "params": [
+            {
+              "name": "activityLogId",
+              "description": "The unique identifier of the activity log entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/projects/{projectId}/discussions/{discussionId}",
+        "definition": {
+          "entityName": "Discussion",
+          "schema": {
+            "$ref": "#/backend/entities/Discussion"
+          },
+          "description": "Stores discussion threads for a project. Includes denormalized 'ownerId' and 'memberIds' from the parent project for authorization independence.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique identifier of the project."
+            },
+            {
+              "name": "discussionId",
+              "description": "The unique identifier of the discussion thread."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/projects/{projectId}/discussions/{discussionId}/comments/{commentId}",
+        "definition": {
+          "entityName": "Comment",
+          "schema": {
+            "$ref": "#/backend/entities/Comment"
+          },
+          "description": "Stores comments within a discussion thread. Includes denormalized 'ownerId' and 'memberIds' from the parent project for authorization independence.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique identifier of the project."
+            },
+            {
+              "name": "discussionId",
+              "description": "The unique identifier of the discussion thread."
+            },
+            {
+              "name": "commentId",
+              "description": "The unique identifier of the comment."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/projects/{projectId}/chat_messages/{chatMessageId}",
+        "definition": {
+          "entityName": "ChatMessage",
+          "schema": {
+            "$ref": "#/backend/entities/ChatMessage"
+          },
+          "description": "Stores chat messages for a project. Includes denormalized 'ownerId' and 'memberIds' from the parent project for authorization independence.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique identifier of the project."
+            },
+            {
+              "name": "chatMessageId",
+              "description": "The unique identifier of the chat message."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/projects/{projectId}/tasks/{taskId}/time_entries/{timeEntryId}",
+        "definition": {
+          "entityName": "TimeEntry",
+          "schema": {
+            "$ref": "#/backend/entities/TimeEntry"
+          },
+          "description": "Stores time entries for a task. Includes denormalized 'ownerId' and 'memberIds' from the parent project and task for authorization independence.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique identifier of the project."
+            },
+            {
+              "name": "taskId",
+              "description": "The unique identifier of the task."
+            },
+            {
+              "name": "timeEntryId",
+              "description": "The unique identifier of the time entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/sticky_notes/{stickyNoteId}",
+        "definition": {
+          "entityName": "StickyNote",
+          "schema": {
+            "$ref": "#/backend/entities/StickyNote"
+          },
+          "description": "Stores sticky notes for a user. Path-based ownership ensures only the user can access their own sticky notes.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "stickyNoteId",
+              "description": "The unique identifier of the sticky note."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/proofing_comments/{proofingCommentId}",
+        "definition": {
+          "entityName": "ProofingComment",
+          "schema": {
+            "$ref": "#/backend/entities/ProofingComment"
+          },
+          "description": "Stores proofing comments. Includes 'userId' and 'projectId' for filtering and access control. Accessible via collection group query.",
+          "params": [
+            {
+              "name": "proofingCommentId",
+              "description": "The unique identifier of the proofing comment."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to ensure Authorization Independence, DBAC (Database-Based Access Control), and supports secure `list` operations. The structure emphasizes path-based ownership for private data and membership maps for collaborative data. Denormalization is used extensively to avoid `get()` calls in security rules.\n\n1.  **Users (Private Data):** User data is stored under `/users/{userId}`. This path-based ownership simplifies security rules. Each user has their own document.\n\n2.  **Projects (Collaborative Data):** Projects are stored in `/projects/{projectId}`. The `ownerId` and `memberIds` fields are denormalized to allow rules to authorize actions based on `request.auth.uid` without requiring `get()` calls. A membership map (derived from `ownerId` and `memberIds`) is maintained within the Project document itself to improve list operation security.\n\n3.  **Tasks (Project Subcollection):** Tasks are stored as a subcollection `/projects/{projectId}/tasks/{taskId}`. The `projectId` is included in each task. The `ownerId` and `memberIds` fields from the parent Project document are denormalized into each Task document. This ensures Authorization Independence, allowing tasks to be created and managed without reading the parent Project document.\n\n4.  **Tags (Project Subcollection):** Tags are stored as a subcollection `/projects/{projectId}/tags/{tagId}`. The `projectId` is included in each tag. The `ownerId` and `memberIds` fields from the parent Project document are denormalized into each Tag document.\n\n5.  **Activity Logs (Collection Group):** Activity logs are stored under `/activity_logs/{activityLogId}`. Each log includes `userId` and `projectId`. Security rules can leverage this information to control access. No denormalization is needed as activity logs will primarily be queried and filtered, not directly authorized for write operations by end-users. List operations are secured using QAPs; access is restricted based on the user's project membership.\n\n6.  **Discussions and Comments (Nested Subcollections):** Discussions are stored in `/projects/{projectId}/discussions/{discussionId}`, and comments are stored in `/projects/{projectId}/discussions/{discussionId}/comments/{commentId}`. This nested structure clearly defines the parent-child relationship and allows for secure and efficient querying. The denormalized authorization context from the Project is present in Discussions and Comments.\n\n7.  **Chat Messages (Project Subcollection):** Chat messages are stored in `/projects/{projectId}/chat_messages/{chatMessageId}`. The `projectId` and the denormalized `ownerId` and `memberIds` from the parent Project document are included in each chat message. This enables security rules to authorize message creation and retrieval based on project membership.\n\n8.  **Time Entries (Task Subcollection):** Time entries are stored in `/projects/{projectId}/tasks/{taskId}/time_entries/{timeEntryId}`. The `projectId` and relevant authorization data from Project (denormalized `ownerId` and `memberIds`) and Task is denormalized into each TimeEntry document. This allows secure operations without reading parent documents.\n\n9.  **Sticky Notes (User Subcollection):** Sticky notes are stored in `/users/{userId}/sticky_notes/{stickyNoteId}`. This path-based ownership ensures that only the user can access their own sticky notes.\n\n10. **Proofing Comments (Collection Group):** Proofing comments are stored in `/proofing_comments/{proofingCommentId}`. The proofing comment will contain the `userId` and `projectId`, to be used in security rules.\n\n**Authorization Independence and QAPs:**\n\n*   **Denormalization:** The key to Authorization Independence is the denormalization of `ownerId` and `memberIds` from Project documents into Task, Tag, Discussion, Comment, ChatMessage, and TimeEntry documents. This avoids `get()` calls in security rules and enables atomic operations.\n*   **Structural Segregation:** The use of path-based ownership (e.g., `/users/{userId}/sticky_notes`) ensures that documents with different access requirements are stored in separate collections.\n*   **Membership Maps:** The `memberIds` and `ownerId` fields in the Project documents act as a membership map, allowing rules to check if a user is authorized to access a project and its associated resources.\n*   **Collection Groups:** The use of `/activity_logs` and `/proofing_comments` as top-level collections (collection groups) simplifies querying across all projects. Security is maintained by restricting access based on the denormalized `projectId` and `userId` within each document.  List operations are secured using QAPs; access is restricted based on the user's project membership, which is validated against denormalized project data within the ActivityLog documents."
+  }
+}
