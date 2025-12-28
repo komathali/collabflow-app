@@ -43,6 +43,11 @@ body {
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 231 48% 48%;
+
+    --fc-border-color: hsl(var(--border));
+    --fc-daygrid-event-dot-width: 8px;
+    --fc-list-event-dot-width: 10px;
+    --fc-list-event-hover-bg-color: hsl(var(--secondary));
   }
   .dark {
     --background: 231 20% 10%;

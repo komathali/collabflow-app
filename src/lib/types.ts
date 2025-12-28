@@ -1,4 +1,5 @@
 
+
 import { User as FirebaseAuthUser } from 'firebase/auth';
 
 export type User = {
@@ -27,15 +28,36 @@ export type Task = {
   id: string;
   projectId: string;
   title: string;
+  description?: string;
   status: TaskStatus;
   priority: TaskPriority;
   assigneeId?: string;
   startDate?: string;
   dueDate?: string;
   tags: string[];
+  dependencies?: string[];
   customFields?: Record<string, any>;
   isMilestone?: boolean;
 };
+
+export type Comment = {
+    id: string;
+    userId: string;
+    content: string;
+    createdAt: string;
+    userName: string;
+    userAvatar?: string;
+};
+
+export type ChatMessage = {
+    id: string;
+    senderId: string;
+    content: string;
+    timestamp: string;
+    senderName: string;
+    senderAvatar?: string;
+};
+
 
 export type ActivityLog = {
   id: string;
@@ -65,4 +87,12 @@ export interface IDataService {
   // Tasks
   getTasksByProjectId(projectId: string): Promise<Task[]>;
   updateTask(taskId: string, taskData: Partial<Task>): Promise<Task | undefined>;
+
+  // Chat & Comments
+  onChatMessages(projectId: string, callback: (messages: ChatMessage[]) => void): () => void;
+  sendChatMessage(projectId: string, content: string): Promise<void>;
+  onTaskComments(projectId: string, taskId: string, callback: (comments: Comment[]) => void): () => void;
+  addTaskComment(projectId: string, taskId: string, content: string): Promise<void>;
 }
+
+    

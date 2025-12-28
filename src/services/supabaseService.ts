@@ -1,5 +1,6 @@
 
-import { IDataService, Project, Task, User } from "@/lib/types";
+
+import { IDataService, Project, Task, User, ChatMessage, Comment } from "@/lib/types";
 import { User as FirebaseAuthUser } from "firebase/auth";
 
 class SupabaseService implements IDataService {
@@ -42,6 +43,20 @@ class SupabaseService implements IDataService {
   updateTask(taskId: string, taskData: Partial<Task>): Promise<Task | undefined> {
     throw new Error("Method not implemented.");
   }
+  onChatMessages(projectId: string, callback: (messages: ChatMessage[]) => void): () => void {
+      throw new Error("Method not implemented.");
+  }
+  sendChatMessage(projectId: string, content: string): Promise<void> {
+      throw new Error("Method not implemented.");
+  }
+  onTaskComments(projectId: string, taskId: string, callback: (comments: Comment[]) => void): () => void {
+      throw new Error("Method not implemented.");
+  }
+  addTaskComment(projectId: string, taskId: string, content: string): Promise<void> {
+      throw new Error("Method not implemented.");
+  }
 }
 
 export const supabaseService = new SupabaseService();
+
+    

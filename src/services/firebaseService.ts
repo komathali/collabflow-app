@@ -1,6 +1,7 @@
 
+
 'use client';
-import { IDataService, Project, Task, User } from "@/lib/types";
+import { IDataService, Project, Task, User, ChatMessage, Comment } from "@/lib/types";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -22,6 +23,9 @@ import {
   getDoc,
   updateDoc,
   deleteDoc,
+  onSnapshot,
+  orderBy,
+  Timestamp
 } from "firebase/firestore";
 import { initializeFirebase } from "@/firebase";
 
@@ -57,14 +61,12 @@ class FirebaseService implements IDataService {
       if (user) {
         // Note: Using the user's UID as the document ID in the 'users' collection.
         const userRef = doc(this.firestore, "users", user.uid);
-        const newUser: Omit<User, 'id'> = {
+        await setDoc(userRef, {
           name: displayName,
           email: user.email!,
           avatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
           role: 'Admin', // Default role for new sign-ups.
-        };
-        // Use setDoc to explicitly set the document with the user's UID.
-        await setDoc(userRef, newUser);
+        });
       }
       
       return user;
@@ -111,7 +113,7 @@ class FirebaseService implements IDataService {
   }
 
   async getProjects(): Promise<Project[]> {
-    const user = await this.getUser();
+    const user = this.auth.currentUser;
     if (!user) {
       return [];
     }
@@ -156,25 +158,39 @@ class FirebaseService implements IDataService {
     return undefined;
   }
 
-  async createProject(project: Omit<Project, 'id' | 'createdAt' | 'ownerId' | 'memberIds'>): Promise<Project> {
-    const user = await this.getUser();
+  async createProject(project: Omit<Project, 'id' | 'createdAt' | 'ownerId' | 'memberIds'> & { memberIds?: string[] }): Promise<Project> {
+    const user = this.auth.currentUser;
     if (!user) {
       throw new Error("User must be logged in to create a project.");
     }
-
+  
+    const memberIds = [...new Set([user.uid, ...(project.memberIds || [])])];
+  
     const projectsCol = collection(this.firestore, "projects");
     const docRef = await addDoc(projectsCol, {
       ...project,
       ownerId: user.uid,
-      memberIds: [user.uid, ...(project.memberIds || [])], // Ensure owner is a member
+      memberIds: memberIds,
       createdAt: serverTimestamp(),
     });
-
-    const newProject = await this.getProjectById(docRef.id);
-    if(!newProject) {
+  
+    const newProjectSnapshot = await getDoc(docRef);
+    const newProjectData = newProjectSnapshot.data();
+  
+    if (!newProjectData) {
       throw new Error("Failed to create project.");
     }
-    return newProject;
+  
+    return {
+      id: docRef.id,
+      name: newProjectData.name,
+      description: newProjectData.description,
+      ownerId: newProjectData.ownerId,
+      memberIds: newProjectData.memberIds,
+      createdAt: (newProjectData.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+      startDate: newProjectData.startDate,
+      endDate: newProjectData.endDate,
+    };
   }
 
   async updateProject(id: string, project: Partial<Project>): Promise<Project | undefined> {
@@ -198,6 +214,7 @@ class FirebaseService implements IDataService {
             id: doc.id,
             projectId: projectId,
             title: data.title,
+            description: data.description,
             status: data.status,
             priority: data.priority,
             assigneeId: data.assigneeId,
@@ -210,20 +227,101 @@ class FirebaseService implements IDataService {
   }
 
   async updateTask(taskId: string, taskData: Partial<Task>): Promise<Task | undefined> {
-    // This assumes a subcollection of tasks under projects
     if (!taskData.projectId) {
         console.error("projectId is required to update a task.");
-        // In a real app, you might need to fetch the task first to get the projectId
         throw new Error("projectId is required to update a task.");
     }
     const taskRef = doc(this.firestore, `projects/${taskData.projectId}/tasks`, taskId);
     await updateDoc(taskRef, taskData);
     const updatedDoc = await getDoc(taskRef);
     if(updatedDoc.exists()) {
-        return { id: updatedDoc.id, ...updatedDoc.data() } as Task;
+        const data = updatedDoc.data();
+        return { 
+            id: updatedDoc.id,
+            projectId: data.projectId,
+            title: data.title,
+            description: data.description,
+            status: data.status,
+            priority: data.priority,
+            assigneeId: data.assigneeId,
+            dueDate: data.dueDate,
+            tags: data.tags,
+         } as Task;
     }
     return undefined;
+  }
+
+  onChatMessages(projectId: string, callback: (messages: ChatMessage[]) => void): () => void {
+    const messagesCol = collection(this.firestore, `projects/${projectId}/chat_messages`);
+    const q = query(messagesCol, orderBy("timestamp", "asc"));
+
+    return onSnapshot(q, (querySnapshot) => {
+      const messages: ChatMessage[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        messages.push({
+          id: doc.id,
+          senderId: data.senderId,
+          content: data.content,
+          timestamp: data.timestamp?.toDate().toISOString(),
+          senderName: data.senderName,
+          senderAvatar: data.senderAvatar,
+        });
+      });
+      callback(messages);
+    });
+  }
+
+  async sendChatMessage(projectId: string, content: string): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) throw new Error("User not authenticated");
+
+    const messagesCol = collection(this.firestore, `projects/${projectId}/chat_messages`);
+    await addDoc(messagesCol, {
+      senderId: user.uid,
+      content: content,
+      timestamp: serverTimestamp(),
+      senderName: user.displayName,
+      senderAvatar: user.photoURL
+    });
+  }
+  
+  onTaskComments(projectId: string, taskId: string, callback: (comments: Comment[]) => void): () => void {
+      const commentsCol = collection(this.firestore, `projects/${projectId}/tasks/${taskId}/comments`);
+      const q = query(commentsCol, orderBy("createdAt", "asc"));
+      
+      return onSnapshot(q, (querySnapshot) => {
+          const comments: Comment[] = [];
+          querySnapshot.forEach((doc) => {
+              const data = doc.data();
+              comments.push({
+                  id: doc.id,
+                  userId: data.userId,
+                  content: data.content,
+                  createdAt: data.createdAt?.toDate().toISOString(),
+                  userName: data.userName,
+                  userAvatar: data.userAvatar,
+              });
+          });
+          callback(comments);
+      });
+  }
+  
+  async addTaskComment(projectId: string, taskId: string, content: string): Promise<void> {
+      const user = this.auth.currentUser;
+      if (!user) throw new Error("User not authenticated");
+
+      const commentsCol = collection(this.firestore, `projects/${projectId}/tasks/${taskId}/comments`);
+      await addDoc(commentsCol, {
+          userId: user.uid,
+          content: content,
+          createdAt: serverTimestamp(),
+          userName: user.displayName,
+          userAvatar: user.photoURL,
+      });
   }
 }
 
 export const firebaseService = new FirebaseService();
+
+    

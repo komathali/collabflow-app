@@ -8,12 +8,15 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useDataService } from "@/hooks/useDataService";
 import { MOCK_TASKS, MOCK_USERS } from "@/lib/data/mock-data";
-import { Project, Task, User } from "@/lib/types";
-import { Calendar, CheckCircle, Clock, Flag, ListChecks, Users } from "lucide-react";
+import { Project, Task, User, ChatMessage as ChatMessageType, Comment } from "@/lib/types";
+import { Calendar, CheckCircle, Clock, Flag, ListChecks, Users, MessageSquare } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DataTable } from '@/components/tasks/data-table';
 import { columns } from '@/components/tasks/columns';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ProjectChat from "@/components/project/project-chat";
+import { useUser } from "@/firebase";
 
 export default function ProjectOverviewPage() {
     const { projectId } = useParams();
@@ -29,8 +32,7 @@ export default function ProjectOverviewPage() {
                     const fetchedProject = await dataService.getProjectById(projectId);
                     setProject(fetchedProject || null);
                     
-                    // Mock fetching tasks for this project
-                    const projectTasks = MOCK_TASKS.filter(t => t.projectId === projectId);
+                    const projectTasks = await dataService.getTasksByProjectId(projectId);
                     setTasks(projectTasks);
                 } catch (error) {
                     console.error("Failed to fetch project data", error);
@@ -55,8 +57,8 @@ export default function ProjectOverviewPage() {
     const progress = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
     
     const onUpdateTask = (taskId: string, values: Partial<Task>) => {
-        // This is a mock implementation. In a real app, you would call `dataService.updateTask(taskId, values)`
         console.log(`Updating task ${taskId} with`, values);
+        dataService.updateTask(taskId, { ...values, projectId: project.id });
         setTasks((currentTasks) =>
           currentTasks.map((task) =>
             task.id === taskId ? { ...task, ...values } : task
@@ -99,9 +101,26 @@ export default function ProjectOverviewPage() {
                 </div>
             </div>
 
-            <Separator />
-
-             <DataTable columns={columns} data={tasks} users={MOCK_USERS} onUpdateTask={onUpdateTask} />
+            <Tabs defaultValue="tasks">
+                <TabsList>
+                    <TabsTrigger value="tasks">
+                        <ListChecks className="mr-2 h-4 w-4"/>
+                        Tasks
+                    </TabsTrigger>
+                    <TabsTrigger value="chat">
+                        <MessageSquare className="mr-2 h-4 w-4"/>
+                        Chat
+                    </TabsTrigger>
+                </TabsList>
+                <TabsContent value="tasks" className="mt-4">
+                    <DataTable columns={columns} data={tasks} users={MOCK_USERS} onUpdateTask={onUpdateTask} />
+                </TabsContent>
+                <TabsContent value="chat" className="mt-4">
+                    <ProjectChat projectId={project.id} />
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }
+
+    
