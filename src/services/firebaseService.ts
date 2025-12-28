@@ -522,7 +522,7 @@ class FirebaseService implements IDataService {
         action, // e.g., 'create', 'update'
         resourceType, // e.g., 'task', 'project'
         resourceId,
-        details: JSON.stringify(details), // Store rich context
+        details, // Store rich context
     });
   }
   
@@ -554,7 +554,7 @@ class FirebaseService implements IDataService {
                   action: data.action,
                   resourceType: data.resourceType,
                   resourceId: data.resourceId,
-                  details: JSON.parse(data.details || '{}'),
+                  details: data.details,
               });
           });
           callback(logs);
@@ -563,4 +563,3 @@ class FirebaseService implements IDataService {
 }
 
 export const firebaseService = new FirebaseService();
-

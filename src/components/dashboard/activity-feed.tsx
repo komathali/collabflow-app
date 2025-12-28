@@ -26,17 +26,18 @@ function ActivityIcon({ resourceType, action }: { resourceType: string, action: 
 
 function formatActivity(activity: ActivityLog) {
     const userName = <span className="font-semibold">{activity.userName}</span>;
+    const details = typeof activity.details === 'string' ? JSON.parse(activity.details) : activity.details;
     
     switch (activity.resourceType) {
         case 'project':
             if (activity.action === 'create') {
-                return <>{userName} created the project <Badge variant="secondary">{activity.details.projectName}</Badge></>;
+                return <>{userName} created the project <Badge variant="secondary">{details.projectName}</Badge></>;
             }
             break;
         case 'task':
-            if (activity.action === 'update' && activity.details.oldStatus) {
-                const taskLink = <Link href={`/projects/${activity.projectId}`} className="font-semibold hover:underline">{activity.details.taskTitle}</Link>
-                return <>{userName} moved {taskLink} from <Badge variant="outline">{activity.details.oldStatus}</Badge> to <Badge variant="outline">{activity.details.newStatus}</Badge> in {activity.details.projectName}</>;
+            if (activity.action === 'update' && details.oldStatus) {
+                const taskLink = <Link href={`/projects/${activity.projectId}`} className="font-semibold hover:underline">{details.taskTitle}</Link>
+                return <>{userName} moved {taskLink} from <Badge variant="outline">{details.oldStatus}</Badge> to <Badge variant="outline">{details.newStatus}</Badge> in {details.projectName}</>;
             }
             break;
         default:
