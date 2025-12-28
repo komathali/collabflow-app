@@ -1,5 +1,5 @@
 
-import { IDataService, Project, User } from "@/lib/types";
+import { IDataService, Project, Task, User } from "@/lib/types";
 import { User as FirebaseAuthUser } from "firebase/auth";
 
 class SupabaseService implements IDataService {
@@ -34,6 +34,12 @@ class SupabaseService implements IDataService {
     throw new Error("Method not implemented.");
   }
   deleteProject(id: string): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  getTasksByProjectId(projectId: string): Promise<Task[]> {
+    throw new Error("Method not implemented.");
+  }
+  updateTask(taskId: string, taskData: Partial<Task>): Promise<Task | undefined> {
     throw new Error("Method not implemented.");
   }
 }

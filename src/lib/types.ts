@@ -25,13 +25,15 @@ export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
 
 export type Task = {
   id: string;
+  projectId: string;
   title: string;
   status: TaskStatus;
   priority: TaskPriority;
   assigneeId?: string;
+  startDate?: string;
   dueDate?: string;
   tags: string[];
-  projectId: string;
+  customFields?: Record<string, any>;
   isMilestone?: boolean;
 };
 
@@ -59,4 +61,8 @@ export interface IDataService {
   createProject(project: Omit<Project, 'id' | 'createdAt' | 'ownerId' | 'memberIds'>): Promise<Project>;
   updateProject(id: string, project: Partial<Project>): Promise<Project | undefined>;
   deleteProject(id: string): Promise<void>;
+
+  // Tasks
+  getTasksByProjectId(projectId: string): Promise<Task[]>;
+  updateTask(taskId: string, taskData: Partial<Task>): Promise<Task | undefined>;
 }

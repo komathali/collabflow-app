@@ -8,10 +8,12 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useDataService } from "@/hooks/useDataService";
 import { MOCK_TASKS, MOCK_USERS } from "@/lib/data/mock-data";
-import { Project, Task } from "@/lib/types";
+import { Project, Task, User } from "@/lib/types";
 import { Calendar, CheckCircle, Clock, Flag, ListChecks, Users } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { DataTable } from '@/components/tasks/data-table';
+import { columns } from '@/components/tasks/columns';
 
 export default function ProjectOverviewPage() {
     const { projectId } = useParams();
@@ -22,23 +24,24 @@ export default function ProjectOverviewPage() {
 
     useEffect(() => {
         if (typeof projectId === 'string') {
-            const fetchProject = async () => {
+            const fetchProjectData = async () => {
                 try {
                     const fetchedProject = await dataService.getProjectById(projectId);
                     setProject(fetchedProject || null);
+                    
                     // Mock fetching tasks for this project
                     const projectTasks = MOCK_TASKS.filter(t => t.projectId === projectId);
                     setTasks(projectTasks);
                 } catch (error) {
-                    console.error("Failed to fetch project", error);
+                    console.error("Failed to fetch project data", error);
                     setProject(null);
                 } finally {
                     setLoading(false);
                 }
             };
-            fetchProject();
+            fetchProjectData();
         }
-    }, [projectId]);
+    }, [projectId, dataService]);
 
     if (loading) {
         return <div>Loading project...</div>;
@@ -50,8 +53,16 @@ export default function ProjectOverviewPage() {
     
     const completedTasks = tasks.filter(t => t.status === 'Done').length;
     const progress = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
-    const milestones = tasks.filter(t => t.isMilestone);
-
+    
+    const onUpdateTask = (taskId: string, values: Partial<Task>) => {
+        // This is a mock implementation. In a real app, you would call `dataService.updateTask(taskId, values)`
+        console.log(`Updating task ${taskId} with`, values);
+        setTasks((currentTasks) =>
+          currentTasks.map((task) =>
+            task.id === taskId ? { ...task, ...values } : task
+          )
+        );
+    };
 
     return (
         <div className="flex flex-col gap-8">
@@ -90,54 +101,7 @@ export default function ProjectOverviewPage() {
 
             <Separator />
 
-            <div className="grid gap-6 md:grid-cols-3">
-                {/* Main Content */}
-                <div className="md:col-span-2 space-y-6">
-                    <Card>
-                        <CardHeader>
-                            <div className="flex items-center gap-2">
-                                <Flag className="w-6 h-6" />
-                                <CardTitle>Milestones</CardTitle>
-                            </div>
-                            <CardDescription>Key project milestones and their status.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                             {milestones.length > 0 ? (
-                                <ul className="space-y-4">
-                                    {milestones.map(milestone => (
-                                        <li key={milestone.id} className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                {milestone.status === 'Done' ? <CheckCircle className="w-5 h-5 text-green-500" /> : <Clock className="w-5 h-5 text-muted-foreground" />}
-                                                <div>
-                                                    <p className={`font-medium ${milestone.status === 'Done' ? 'line-through text-muted-foreground' : ''}`}>{milestone.title}</p>
-                                                    <p className="text-sm text-muted-foreground">Due: {new Date(milestone.dueDate!).toLocaleDateString()}</p>
-                                                </div>
-                                            </div>
-                                             <Badge variant={milestone.status === 'Done' ? 'secondary' : 'default'}>{milestone.status}</Badge>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p className="text-sm text-muted-foreground text-center py-4">No milestones defined for this project.</p>
-                            )}
-                        </CardContent>
-                    </Card>
-                </div>
-                {/* Side Panel */}
-                <div className="space-y-6">
-                     <Card>
-                        <CardHeader>
-                            <div className="flex items-center gap-2">
-                                <ListChecks className="w-6 h-6" />
-                                <CardTitle>Recent Activity</CardTitle>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-muted-foreground text-center py-4">Activity feed coming soon.</p>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
+             <DataTable columns={columns} data={tasks} users={MOCK_USERS} onUpdateTask={onUpdateTask} />
         </div>
     );
 }

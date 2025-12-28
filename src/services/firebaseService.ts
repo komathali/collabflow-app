@@ -1,6 +1,6 @@
 
 'use client';
-import { IDataService, Project, User } from "@/lib/types";
+import { IDataService, Project, Task, User } from "@/lib/types";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -186,6 +186,43 @@ class FirebaseService implements IDataService {
   async deleteProject(id: string): Promise<void> {
     const docRef = doc(this.firestore, "projects", id);
     await deleteDoc(docRef);
+  }
+
+  async getTasksByProjectId(projectId: string): Promise<Task[]> {
+    const tasksCol = collection(this.firestore, `projects/${projectId}/tasks`);
+    const querySnapshot = await getDocs(tasksCol);
+    const tasks: Task[] = [];
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        tasks.push({
+            id: doc.id,
+            projectId: projectId,
+            title: data.title,
+            status: data.status,
+            priority: data.priority,
+            assigneeId: data.assigneeId,
+            dueDate: data.dueDate,
+            tags: data.tags,
+            customFields: data.customFields,
+        });
+    });
+    return tasks;
+  }
+
+  async updateTask(taskId: string, taskData: Partial<Task>): Promise<Task | undefined> {
+    // This assumes a subcollection of tasks under projects
+    if (!taskData.projectId) {
+        console.error("projectId is required to update a task.");
+        // In a real app, you might need to fetch the task first to get the projectId
+        throw new Error("projectId is required to update a task.");
+    }
+    const taskRef = doc(this.firestore, `projects/${taskData.projectId}/tasks`, taskId);
+    await updateDoc(taskRef, taskData);
+    const updatedDoc = await getDoc(taskRef);
+    if(updatedDoc.exists()) {
+        return { id: updatedDoc.id, ...updatedDoc.data() } as Task;
+    }
+    return undefined;
   }
 }
 

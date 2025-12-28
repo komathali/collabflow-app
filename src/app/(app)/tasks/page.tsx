@@ -1,26 +1,52 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TableIcon } from 'lucide-react';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useDataService } from '@/hooks/useDataService';
+import { Task } from '@/lib/types';
+import { columns } from '@/components/tasks/columns';
+import { DataTable } from '@/components/tasks/data-table';
+import { MOCK_TASKS, MOCK_USERS } from '@/lib/data/mock-data';
 
 export default function TasksPage() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const dataService = useDataService();
+
+  useEffect(() => {
+    // In a real app, you would fetch tasks from your data service
+    // For now, we use mock data.
+    const getTasks = async () => {
+      // This is where you might call `dataService.getTasks()`
+      setTasks(MOCK_TASKS);
+      setLoading(false);
+    };
+
+    getTasks();
+  }, [dataService]);
+
+  const onUpdateTask = (taskId: string, values: Partial<Task>) => {
+    // This is a mock implementation. In a real app, you would call `dataService.updateTask(taskId, values)`
+    console.log(`Updating task ${taskId} with`, values);
+    setTasks((currentTasks) =>
+      currentTasks.map((task) =>
+        task.id === taskId ? { ...task, ...values } : task
+      )
+    );
+  };
+
+  if (loading) {
+    return <div>Loading tasks...</div>;
+  }
+
   return (
-    <div>
-      <h1 className="text-3xl font-bold tracking-tight font-headline mb-4">
-        Task Table View
-      </h1>
-      <Card>
-        <CardHeader>
-          <CardTitle>Projects & Tasks</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center text-center p-12 border-2 border-dashed rounded-lg">
-            <TableIcon className="w-16 h-16 text-muted-foreground" />
-            <h3 className="mt-4 text-lg font-semibold">Dynamic Table View Coming Soon</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              A fully-featured table using @tanstack/react-table with inline editing and dynamic columns is under construction.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="flex flex-col gap-8">
+       <div>
+            <h1 className="text-3xl font-bold tracking-tight font-headline">
+                Tasks
+            </h1>
+            <p className="text-muted-foreground">Manage all tasks across your projects.</p>
+        </div>
+      <DataTable columns={columns} data={tasks} users={MOCK_USERS} onUpdateTask={onUpdateTask} />
     </div>
   );
 }
