@@ -12,7 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Popover, PopoverContent, PopoverTrigger, PopoverPortal } from "../ui/popover";
 import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { cn } from "@/lib/utils";
@@ -79,7 +79,7 @@ export function CreateProjectModal({ isOpen, setIsOpen, onProjectCreated }: Crea
           ...values,
           framework: values.framework as ProjectFramework,
           startDate: values.startDate?.toISOString(),
-          endDate: values.endDate?.toISOString()
+          ...(values.endDate && { endDate: values.endDate.toISOString() })
       };
       const newProject = await dataService.createProject(newProjectData);
       toast({
@@ -187,14 +187,16 @@ export function CreateProjectModal({ isOpen, setIsOpen, onProjectCreated }: Crea
                             </Button>
                         </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 z-[60]" align="start">
-                        <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                        />
-                        </PopoverContent>
+                        <PopoverPortal>
+                          <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              initialFocus
+                          />
+                          </PopoverContent>
+                        </PopoverPortal>
                     </Popover>
                     <FormMessage />
                     </FormItem>
@@ -225,14 +227,16 @@ export function CreateProjectModal({ isOpen, setIsOpen, onProjectCreated }: Crea
                             </Button>
                         </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 z-[60]" align="start">
-                        <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                        />
-                        </PopoverContent>
+                         <PopoverPortal>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </PopoverPortal>
                     </Popover>
                     <FormMessage />
                     </FormItem>
@@ -255,30 +259,32 @@ export function CreateProjectModal({ isOpen, setIsOpen, onProjectCreated }: Crea
                                 </Button>
                             </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 z-[60]">
-                           <Command>
-                                <CommandInput placeholder="Search users..."/>
-                                <CommandList>
-                                <CommandEmpty>No users found.</CommandEmpty>
-                                <CommandGroup>
-                                    {users.map(user => (
-                                        <CommandItem
-                                            key={user.id}
-                                            value={user.name}
-                                            onSelect={() => {
-                                                const selected = field.value || [];
-                                                const isSelected = selected.includes(user.id);
-                                                form.setValue('memberIds', isSelected ? selected.filter(id => id !== user.id) : [...selected, user.id]);
-                                            }}
-                                        >
-                                             <Check className={cn("mr-2 h-4 w-4", (field.value || []).includes(user.id) ? "opacity-100" : "opacity-0")}/>
-                                             {user.name}
-                                        </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                                </CommandList>
-                           </Command>
-                        </PopoverContent>
+                         <PopoverPortal>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                            <Command>
+                                    <CommandInput placeholder="Search users..."/>
+                                    <CommandList>
+                                    <CommandEmpty>No users found.</CommandEmpty>
+                                    <CommandGroup>
+                                        {users.map(user => (
+                                            <CommandItem
+                                                key={user.id}
+                                                value={user.name}
+                                                onSelect={() => {
+                                                    const selected = field.value || [];
+                                                    const isSelected = selected.includes(user.id);
+                                                    form.setValue('memberIds', isSelected ? selected.filter(id => id !== user.id) : [...selected, user.id]);
+                                                }}
+                                            >
+                                                <Check className={cn("mr-2 h-4 w-4", (field.value || []).includes(user.id) ? "opacity-100" : "opacity-0")}/>
+                                                {user.name}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                    </CommandList>
+                            </Command>
+                            </PopoverContent>
+                        </PopoverPortal>
                      </Popover>
                     <FormMessage />
                 </FormItem>
