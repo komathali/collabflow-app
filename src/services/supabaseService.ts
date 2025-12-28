@@ -1,0 +1,22 @@
+import { IDataService, Project } from "@/lib/types";
+import { User as FirebaseAuthUser } from "firebase/auth";
+
+class SupabaseService implements IDataService {
+  login(email: string, password: string): Promise<FirebaseAuthUser | null> {
+    throw new Error("Method not implemented.");
+  }
+  logout(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  getUser(): Promise<FirebaseAuthUser | null> {
+    throw new Error("Method not implemented.");
+  }
+  getProjects(): Promise<Project[]> {
+    throw new Error("Method not implemented.");
+  }
+  createProject(project: Omit<Project, "id" | "createdAt" | "ownerId" | "memberIds">): Promise<Project> {
+    throw new Error("Method not implemented.");
+  }
+}
+
+export const supabaseService = new SupabaseService();

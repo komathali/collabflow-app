@@ -1,3 +1,5 @@
+import { User as FirebaseAuthUser } from 'firebase/auth';
+
 export type User = {
   id: string;
   name: string;
@@ -10,7 +12,8 @@ export type Project = {
   id: string;
   name: string;
   description: string;
-  members: User[];
+  ownerId: string;
+  memberIds: string[];
   createdAt: string;
 };
 
@@ -35,3 +38,15 @@ export type ActivityLog = {
   timestamp: string;
   details: string;
 };
+
+// Data Service Interface
+export interface IDataService {
+  // Auth
+  login(email: string, password: string): Promise<FirebaseAuthUser | null>;
+  logout(): Promise<void>;
+  getUser(): Promise<FirebaseAuthUser | null>;
+
+  // Data
+  getProjects(): Promise<Project[]>;
+  createProject(project: Omit<Project, 'id' | 'createdAt' | 'ownerId' | 'memberIds'>): Promise<Project>;
+}
