@@ -1,6 +1,6 @@
 
 'use client';
-import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage, TimeEntry } from "@/lib/types";
+import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage, TimeEntry, ActivityLog } from "@/lib/types";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -24,7 +24,9 @@ import {
   deleteDoc,
   onSnapshot,
   orderBy,
-  Timestamp
+  Timestamp,
+  collectionGroup,
+  limit
 } from "firebase/firestore";
 import { initializeFirebase } from "@/firebase";
 
@@ -179,17 +181,21 @@ class FirebaseService implements IDataService {
     if (!newProjectData) {
       throw new Error("Failed to create project.");
     }
-  
-    return {
-      id: docRef.id,
-      name: newProjectData.name,
-      description: newProjectData.description,
-      ownerId: newProjectData.ownerId,
-      memberIds: newProjectData.memberIds,
-      createdAt: (newProjectData.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
-      startDate: newProjectData.startDate,
-      endDate: newProjectData.endDate,
+
+    const newProject: Project = {
+        id: docRef.id,
+        name: newProjectData.name,
+        description: newProjectData.description,
+        ownerId: newProjectData.ownerId,
+        memberIds: newProjectData.memberIds,
+        createdAt: (newProjectData.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+        startDate: newProjectData.startDate,
+        endDate: newProjectData.endDate,
     };
+
+    await this.logActivity('create', 'project', newProject.id, { projectName: newProject.name }, newProject.id);
+  
+    return newProject;
   }
 
   async updateProject(id: string, project: Partial<Project>): Promise<Project | undefined> {
@@ -218,6 +224,7 @@ class FirebaseService implements IDataService {
             priority: data.priority,
             assigneeId: data.assigneeId,
             dueDate: data.dueDate,
+            createdAt: data.createdAt?.toDate().toISOString(),
             tags: data.tags,
             customFields: data.customFields,
         });
@@ -230,8 +237,30 @@ class FirebaseService implements IDataService {
         console.error("projectId is required to update a task.");
         throw new Error("projectId is required to update a task.");
     }
+
     const taskRef = doc(this.firestore, `projects/${taskData.projectId}/tasks`, taskId);
+    const oldTaskSnap = await getDoc(taskRef);
+    const oldTaskData = oldTaskSnap.data();
+
     await updateDoc(taskRef, taskData);
+
+    // Log activity if status changed
+    if (oldTaskData && taskData.status && oldTaskData.status !== taskData.status) {
+        const project = await this.getProjectById(taskData.projectId);
+        await this.logActivity(
+            'update', 
+            'task', 
+            taskId, 
+            { 
+                taskTitle: taskData.title || oldTaskData.title,
+                oldStatus: oldTaskData.status,
+                newStatus: taskData.status,
+                projectName: project?.name,
+            }, 
+            taskData.projectId
+        );
+    }
+
     const updatedDoc = await getDoc(taskRef);
     if(updatedDoc.exists()) {
         const data = updatedDoc.data();
@@ -244,6 +273,7 @@ class FirebaseService implements IDataService {
             priority: data.priority,
             assigneeId: data.assigneeId,
             dueDate: data.dueDate,
+            createdAt: data.createdAt?.toDate().toISOString(),
             tags: data.tags,
          } as Task;
     }
@@ -457,6 +487,60 @@ class FirebaseService implements IDataService {
 
     const entriesCol = collection(this.firestore, `projects/${entry.projectId}/tasks/${entry.taskId}/time_entries`);
     await addDoc(entriesCol, entry);
+  }
+  
+  // Activity Log
+  async logActivity(action: string, resourceType: string, resourceId: string, details: any, projectId: string): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user) return; // Don't log if no user
+
+    const activityCol = collection(this.firestore, 'activity_logs');
+    await addDoc(activityCol, {
+        timestamp: serverTimestamp(),
+        userId: user.uid,
+        userName: user.displayName, // Denormalize for easy display
+        userAvatar: user.photoURL,  // Denormalize for easy display
+        projectId,
+        action, // e.g., 'create', 'update'
+        resourceType, // e.g., 'task', 'project'
+        resourceId,
+        details: JSON.stringify(details), // Store rich context
+    });
+  }
+  
+  onActivityLogs(projectIds: string[], callback: (logs: ActivityLog[]) => void): () => void {
+      if (projectIds.length === 0) {
+        callback([]);
+        return () => {};
+      }
+      // Note: Firestore 'in' queries are limited to 30 items.
+      // For a production app with many projects, you might need a different strategy.
+      const q = query(
+        collectionGroup(this.firestore, 'activity_logs'),
+        where('projectId', 'in', projectIds.slice(0, 30)),
+        orderBy('timestamp', 'desc'),
+        limit(50)
+      );
+
+      return onSnapshot(q, (querySnapshot) => {
+          const logs: ActivityLog[] = [];
+          querySnapshot.forEach((doc) => {
+              const data = doc.data();
+              logs.push({
+                  id: doc.id,
+                  timestamp: (data.timestamp as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+                  userId: data.userId,
+                  userName: data.userName,
+                  userAvatar: data.userAvatar,
+                  projectId: data.projectId,
+                  action: data.action,
+                  resourceType: data.resourceType,
+                  resourceId: data.resourceId,
+                  details: JSON.parse(data.details || '{}'),
+              });
+          });
+          callback(logs);
+      });
   }
 }
 

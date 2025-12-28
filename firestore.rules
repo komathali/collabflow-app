@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -45,15 +46,6 @@ service cloud.firestore {
       let projectData = getProjectData(projectId);
       return isSignedIn() && (request.auth.uid == projectData.ownerId || request.auth.uid in projectData.memberIds);
     }
-    
-    /**
-     * Returns true if the user is the owner of a given project.
-     * Performs a document read.
-     */
-    // function isProjectOwnerByGet(projectId) { // Removed unused function
-    //   let projectData = getProjectData(projectId);
-    //   return isSignedIn() && request.auth.uid == projectData.ownerId;
-    // }
 
     /**
      * Returns true if the user is an owner or member of a project,
@@ -167,11 +159,13 @@ service cloud.firestore {
     // ------------------------------------------------------------------
 
     match /activity_logs/{activityLogId} {
-      allow get: if getProjectData(resource.data.projectId).ownerId == request.auth.uid || request.auth.uid in getProjectData(resource.data.projectId).memberIds;
-      allow list: if false; // Secure default for collection groups
-      allow create: if false; // Should be created by backend triggers/functions
-      allow update: if false; // Logs are immutable
-      allow delete: if false; // Logs are immutable
+      // Allow create only by the service/backend logic
+      allow create: if isProjectMemberByGet(request.resource.data.projectId) && request.resource.data.userId == request.auth.uid;
+      // Read access requires being a member of the project the log belongs to.
+      // This is primarily for collection group queries.
+      allow read: if isProjectMemberByGet(resource.data.projectId);
+      // Updates and deletes are not allowed to maintain log integrity.
+      allow update, delete: if false;
     }
     
     match /proofing_comments/{proofingCommentId} {

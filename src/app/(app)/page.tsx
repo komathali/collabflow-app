@@ -1,4 +1,6 @@
+
 'use client';
+import ActivityFeed from "@/components/dashboard/activity-feed";
 import MyAgenda from "@/components/dashboard/my-agenda";
 import MyTasks from "@/components/dashboard/my-tasks";
 import StickyNotes from "@/components/dashboard/sticky-notes";
@@ -20,8 +22,9 @@ export default function DashboardPage() {
       </div>
       <Separator />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <MyTasks />
+          <ActivityFeed />
         </div>
         <div className="grid gap-6">
           <MyAgenda />

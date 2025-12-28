@@ -1,5 +1,5 @@
 
-import type { Task, User, Project } from '@/lib/types';
+import type { Task, User, Project, ActivityLog } from '@/lib/types';
 
 export const MOCK_USERS: User[] = [
   { id: 'user-1', name: 'Alice Johnson', email: 'alice@example.com', role: 'Admin', avatarUrl: 'https://i.pravatar.cc/150?u=user-1' },
@@ -40,6 +40,7 @@ export const MOCK_TASKS: Task[] = [
     assigneeId: 'user-1',
     startDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
     dueDate: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(),
+    createdAt: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
     tags: ['design', 'web'],
     projectId: 'proj-1',
     isMilestone: true,
@@ -52,6 +53,7 @@ export const MOCK_TASKS: Task[] = [
     assigneeId: 'user-2',
     startDate: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(),
     dueDate: new Date(new Date().setDate(new Date().getDate() + 5)).toISOString(),
+    createdAt: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
     tags: ['development', 'auth'],
     projectId: 'proj-1',
     dependencies: ['task-1'],
@@ -64,6 +66,7 @@ export const MOCK_TASKS: Task[] = [
     assigneeId: 'user-2',
     startDate: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(),
     dueDate: new Date(new Date().setDate(new Date().getDate() - 2)).toISOString(),
+    createdAt: new Date(new Date().setDate(new Date().getDate() - 5)).toISOString(),
     tags: ['devops'],
     projectId: 'proj-1',
   },
@@ -75,6 +78,7 @@ export const MOCK_TASKS: Task[] = [
     assigneeId: 'user-1',
     startDate: new Date(new Date().setDate(new Date().getDate() + 5)).toISOString(),
     dueDate: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString(),
+    createdAt: new Date(new Date().setDate(new Date().getDate() + 2)).toISOString(),
     tags: ['documentation'],
     projectId: 'proj-2',
     dependencies: ['task-2'],
@@ -87,6 +91,7 @@ export const MOCK_TASKS: Task[] = [
     assigneeId: 'user-1',
     startDate: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString(),
     dueDate: new Date(new Date().setDate(new Date().getDate() + 10)).toISOString(),
+    createdAt: new Date(new Date().setDate(new Date().getDate() + 4)).toISOString(),
     tags: ['testing', 'feedback'],
     projectId: 'proj-2',
   },
@@ -98,6 +103,7 @@ export const MOCK_TASKS: Task[] = [
     assigneeId: 'user-1',
     startDate: new Date('2023-03-10').toISOString(),
     dueDate: new Date('2023-03-15').toISOString(),
+    createdAt: new Date('2023-03-10').toISOString(),
     tags: ['design', 'branding'],
     projectId: 'proj-1',
     isMilestone: true,
@@ -110,8 +116,60 @@ export const MOCK_TASKS: Task[] = [
     assigneeId: 'user-2',
     startDate: new Date('2023-10-25').toISOString(),
     dueDate: new Date('2023-11-01').toISOString(),
+    createdAt: new Date('2023-10-20').toISOString(),
     tags: ['mobile', 'release'],
     projectId: 'proj-2',
     isMilestone: true,
   }
 ];
+
+export const MOCK_ACTIVITIES: ActivityLog[] = [
+    {
+        id: 'act-1',
+        timestamp: new Date(new Date().setHours(new Date().getHours() - 1)).toISOString(),
+        userId: 'user-1',
+        userName: 'Alice Johnson',
+        userAvatar: 'https://i.pravatar.cc/150?u=user-1',
+        projectId: 'proj-1',
+        action: 'update',
+        resourceType: 'task',
+        resourceId: 'task-1',
+        details: {
+            taskTitle: 'Design the new landing page',
+            oldStatus: 'To-Do',
+            newStatus: 'In Progress',
+            projectName: 'CollabFlow Website Redesign'
+        }
+    },
+    {
+        id: 'act-2',
+        timestamp: new Date(new Date().setHours(new Date().getHours() - 3)).toISOString(),
+        userId: 'user-2',
+        userName: 'Bob Williams',
+        userAvatar: 'https://i.pravatar.cc/150?u=user-2',
+        projectId: 'proj-1',
+        action: 'create',
+        resourceType: 'project',
+        resourceId: 'proj-1',
+        details: {
+            projectName: 'CollabFlow Website Redesign',
+        }
+    },
+     {
+        id: 'act-3',
+        timestamp: new Date(new Date().setDate(new Date().getDate() - 1)).toISOString(),
+        userId: 'user-1',
+        userName: 'Alice Johnson',
+        userAvatar: 'https://i.pravatar.cc/150?u=user-1',
+        projectId: 'proj-1',
+        action: 'update',
+        resourceType: 'task',
+        resourceId: 'task-3',
+        details: {
+            taskTitle: 'Setup CI/CD pipeline',
+            oldStatus: 'In Progress',
+            newStatus: 'Done',
+            projectName: 'CollabFlow Website Redesign'
+        }
+    },
+]

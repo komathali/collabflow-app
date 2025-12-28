@@ -34,6 +34,7 @@ export type Task = {
   assigneeId?: string;
   startDate?: string;
   dueDate?: string;
+  createdAt?: string;
   tags: string[];
   dependencies?: string[];
   customFields?: Record<string, any>;
@@ -82,10 +83,15 @@ export type WikiPage = {
 
 export type ActivityLog = {
   id: string;
-  user: User;
-  action: string;
   timestamp: string;
-  details: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  projectId: string;
+  action: string;
+  resourceType: string;
+  resourceId: string;
+  details: any;
 };
 
 export type TimeEntry = {
@@ -141,6 +147,10 @@ export interface IDataService {
   // Time Tracking
   onTimeEntries(projectId: string, taskId: string, callback: (entries: TimeEntry[]) => void): () => void;
   addTimeEntry(entry: Omit<TimeEntry, 'id'>): Promise<void>;
+
+  // Activity Log
+  logActivity(action: string, resourceType: string, resourceId: string, details: any, projectId: string): Promise<void>;
+  onActivityLogs(projectIds: string[], callback: (logs: ActivityLog[]) => void): () => void;
 }
 
     

@@ -21,6 +21,7 @@ import {
   FolderKanban,
   BarChartHorizontal,
   CalendarDays,
+  History,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -33,6 +34,7 @@ const menuItems = [
   { href: '/board', label: 'Board', icon: KanbanSquare },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays },
   { href: '/reporting', label: 'Reporting', icon: BarChartHorizontal },
+  { href: '/activities', label: 'All Activities', icon: History },
   { href: '/summary', label: 'AI Summary', icon: BrainCircuit },
 ];
 
