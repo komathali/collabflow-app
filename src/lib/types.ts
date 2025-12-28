@@ -88,6 +88,19 @@ export type ActivityLog = {
   details: string;
 };
 
+export type TimeEntry = {
+  id: string;
+  userId: string;
+  taskId: string;
+  projectId: string;
+  startTime: string;
+  endTime: string;
+  duration: number;
+  notes?: string;
+  billable: boolean;
+};
+
+
 // Data Service Interface
 export interface IDataService {
   // Auth
@@ -124,6 +137,10 @@ export interface IDataService {
   createWikiPage(projectId: string, title: string): Promise<WikiPage>;
   updateWikiPage(projectId: string, pageId: string, data: Partial<WikiPage>): Promise<void>;
   deleteWikiPage(projectId: string, pageId: string): Promise<void>;
+  
+  // Time Tracking
+  onTimeEntries(projectId: string, taskId: string, callback: (entries: TimeEntry[]) => void): () => void;
+  addTimeEntry(entry: Omit<TimeEntry, 'id'>): Promise<void>;
 }
 
     

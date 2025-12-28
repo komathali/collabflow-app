@@ -1,6 +1,6 @@
 
 
-import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage } from "@/lib/types";
+import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage, TimeEntry } from "@/lib/types";
 import { User as FirebaseAuthUser } from "firebase/auth";
 
 class SupabaseService implements IDataService {
@@ -73,6 +73,14 @@ class SupabaseService implements IDataService {
       throw new Error("Method not implemented.");
   }
   deleteWikiPage(projectId: string, pageId: string): Promise<void> {
+      throw new Error("Method not implemented.");
+  }
+
+  // Time Tracking
+  onTimeEntries(projectId: string, taskId: string, callback: (entries: TimeEntry[]) => void): () => void {
+      throw new Error("Method not implemented.");
+  }
+  addTimeEntry(entry: Omit<TimeEntry, "id">): Promise<void> {
       throw new Error("Method not implemented.");
   }
 }

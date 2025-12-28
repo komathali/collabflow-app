@@ -1,8 +1,7 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { Task, TaskPriority, TaskStatus, User } from '@/lib/types';
-import { Badge } from '@/components/ui/badge';
+import { Task, User } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableColumnHeader } from './data-table-column-header';
 import { DataTableRowActions } from './data-table-row-actions';
@@ -179,6 +178,9 @@ export const columns: ColumnDef<Task>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => <DataTableRowActions row={row} />,
+    cell: ({ row, table }) => {
+      const { activeTimerId, handleTimerToggle } = (table.options.meta as any) || {};
+      return <DataTableRowActions row={row} activeTimerId={activeTimerId} onTimerToggle={handleTimerToggle} />;
+    },
   },
 ];

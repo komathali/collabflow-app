@@ -27,7 +27,10 @@ import {
 
 import { DataTablePagination } from './data-table-pagination';
 import { DataTableToolbar } from './data-table-toolbar';
-import { Task, User } from '@/lib/types';
+import { Task, User, TimeEntry } from '@/lib/types';
+import { useDataService } from '@/hooks/useDataService';
+import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/firebase';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -50,6 +53,49 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = React.useState('');
 
+  const [activeTimerId, setActiveTimerId] = React.useState<string | null>(null);
+  const [startTime, setStartTime] = React.useState<Date | null>(null);
+  const dataService = useDataService();
+  const { user } = useUser();
+  const { toast } = useToast();
+
+  const handleTimerToggle = (taskId: string) => {
+    if (activeTimerId === taskId) {
+      // Stop the timer
+      if (startTime && user) {
+        const endTime = new Date();
+        const duration = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60); // in hours
+        const task = (data as Task[]).find(t => t.id === taskId);
+        if (task) {
+          const timeEntry: Omit<TimeEntry, 'id'> = {
+            userId: user.uid,
+            taskId: taskId,
+            projectId: task.projectId,
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
+            duration: parseFloat(duration.toFixed(2)),
+            billable: false, // Default value
+          };
+          dataService.addTimeEntry(timeEntry)
+            .then(() => toast({ title: 'Time logged successfully' }))
+            .catch(() => toast({ title: 'Error logging time', variant: 'destructive' }));
+        }
+      }
+      setActiveTimerId(null);
+      setStartTime(null);
+    } else {
+      // A different timer is running
+      if (activeTimerId) {
+        toast({ title: "Another timer is already running.", description: "Please stop the active timer before starting a new one.", variant: 'destructive' });
+        return;
+      }
+      // Start a new timer
+      setActiveTimerId(taskId);
+      setStartTime(new Date());
+      toast({ title: "Timer started!", description: `Timer for task ${taskId} has started.` });
+    }
+  };
+
   const table = useReactTable({
     data,
     columns,
@@ -62,6 +108,8 @@ export function DataTable<TData, TValue>({
     },
     meta: {
       users,
+      activeTimerId,
+      handleTimerToggle,
       updateData: (rowIndex: number, columnId: string, value: any) => {
         const task = data[rowIndex] as unknown as Task;
         onUpdateTask(task.id, { [columnId]: value, projectId: task.projectId });

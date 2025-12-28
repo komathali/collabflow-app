@@ -8,14 +8,18 @@ import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { cn } from '@/lib/utils';
 import { priorities } from '../tasks/data';
+import { PlayCircle, StopCircle, Timer } from 'lucide-react';
+import { Button } from '../ui/button';
 
 type TaskCardProps = {
   task: Task;
   users: User[];
   isOverlay?: boolean;
+  activeTimerId?: string | null;
+  onTimerToggle?: (taskId: string) => void;
 };
 
-export function TaskCard({ task, users, isOverlay }: TaskCardProps) {
+export function TaskCard({ task, users, isOverlay, activeTimerId, onTimerToggle }: TaskCardProps) {
   const {
     setNodeRef,
     attributes,
@@ -38,17 +42,35 @@ export function TaskCard({ task, users, isOverlay }: TaskCardProps) {
 
   const assignee = users.find((u) => u.id === task.assigneeId);
   const priority = priorities.find((p) => p.value === task.priority);
+  const isTimerActive = activeTimerId === task.id;
 
   const cardContent = (
      <Card
       className={cn(
-        "w-[300px] cursor-grab",
+        "w-[300px] group",
+        !isOverlay && "cursor-grab",
         isDragging && "opacity-50 ring-2 ring-primary",
-        isOverlay && "ring-2 ring-primary shadow-lg"
+        isOverlay && "ring-2 ring-primary shadow-lg",
+        isTimerActive && "border-primary ring-2 ring-primary/50"
       )}
     >
       <CardHeader className="p-3">
-        <p className="font-semibold">{task.title}</p>
+        <div className="flex justify-between items-start">
+            <p className="font-semibold pr-2">{task.title}</p>
+            {onTimerToggle && (
+                 <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 flex-shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent dnd-kit drag start
+                      onTimerToggle(task.id);
+                    }}
+                 >
+                    {isTimerActive ? <StopCircle className="text-red-500" /> : <PlayCircle className="text-muted-foreground group-hover:text-foreground" />}
+                </Button>
+            )}
+        </div>
       </CardHeader>
       <CardContent className="p-3 pt-0">
         <div className="flex items-center gap-2">
@@ -56,6 +78,12 @@ export function TaskCard({ task, users, isOverlay }: TaskCardProps) {
                 <Badge variant="outline" className="flex items-center gap-1">
                     {priority.icon && <priority.icon className="h-3 w-3" />}
                     {priority.label}
+                </Badge>
+            )}
+             {isTimerActive && (
+                <Badge variant="secondary" className="flex items-center gap-1 animate-pulse">
+                    <Timer className="h-3 w-3" />
+                    Active
                 </Badge>
             )}
         </div>

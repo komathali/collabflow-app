@@ -1,6 +1,6 @@
 
 'use client';
-import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage } from "@/lib/types";
+import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage, TimeEntry } from "@/lib/types";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -424,6 +424,39 @@ class FirebaseService implements IDataService {
   async deleteWikiPage(projectId: string, pageId: string): Promise<void> {
     const pageRef = doc(this.firestore, `projects/${projectId}/wiki_pages`, pageId);
     await deleteDoc(pageRef);
+  }
+
+  // Time Tracking
+  onTimeEntries(projectId: string, taskId: string, callback: (entries: TimeEntry[]) => void): () => void {
+    const entriesCol = collection(this.firestore, `projects/${projectId}/tasks/${taskId}/time_entries`);
+    const q = query(entriesCol, orderBy("startTime", "desc"));
+
+    return onSnapshot(q, (querySnapshot) => {
+      const entries: TimeEntry[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        entries.push({
+          id: doc.id,
+          userId: data.userId,
+          taskId: data.taskId,
+          projectId: data.projectId,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          duration: data.duration,
+          notes: data.notes,
+          billable: data.billable,
+        });
+      });
+      callback(entries);
+    });
+  }
+
+  async addTimeEntry(entry: Omit<TimeEntry, 'id'>): Promise<void> {
+    const user = this.auth.currentUser;
+    if (!user || user.uid !== entry.userId) throw new Error("User not authenticated or mismatched.");
+
+    const entriesCol = collection(this.firestore, `projects/${entry.projectId}/tasks/${entry.taskId}/time_entries`);
+    await addDoc(entriesCol, entry);
   }
 }
 

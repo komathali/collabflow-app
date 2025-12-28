@@ -11,11 +11,15 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import { SortableContext, arrayMove } from '@dnd-kit/sortable';
-import { Task, TaskStatus, User } from '@/lib/types';
+import { Task, TaskStatus, User, TimeEntry } from '@/lib/types';
 import { KanbanColumn } from './kanban-column';
 import { TaskCard } from './task-card';
 import { statuses } from '../tasks/data';
 import { createPortal } from 'react-dom';
+import { useDataService } from '@/hooks/useDataService';
+import { useUser } from '@/firebase';
+import { toast } from '@/hooks/use-toast';
+
 
 type KanbanBoardProps = {
   tasks: Task[];
@@ -32,6 +36,11 @@ type TaskContainer = {
 export function KanbanBoard({ tasks, users, onUpdateTask }: KanbanBoardProps) {
   const [taskContainers, setTaskContainers] = useState<TaskContainer[]>([]);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+  const [activeTimerId, setActiveTimerId] = useState<string | null>(null);
+  const [startTime, setStartTime] = useState<Date | null>(null);
+  const dataService = useDataService();
+  const { user } = useUser();
   
   useEffect(() => {
     const initialContainers = statuses.map(status => ({
@@ -53,6 +62,44 @@ export function KanbanBoard({ tasks, users, onUpdateTask }: KanbanBoardProps) {
   const tasksId = useMemo(() => {
     return tasks.map((task) => task.id);
   }, [tasks]);
+
+  const handleTimerToggle = (taskId: string) => {
+    if (activeTimerId === taskId) {
+      // Stop the timer
+      if (startTime && user) {
+        const endTime = new Date();
+        const duration = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60); // in hours
+        const task = tasks.find(t => t.id === taskId);
+        if (task) {
+          const timeEntry: Omit<TimeEntry, 'id'> = {
+            userId: user.uid,
+            taskId: taskId,
+            projectId: task.projectId,
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
+            duration: parseFloat(duration.toFixed(2)),
+            billable: false, // Default value
+          };
+          dataService.addTimeEntry(timeEntry)
+            .then(() => toast({ title: 'Time logged successfully' }))
+            .catch(() => toast({ title: 'Error logging time', variant: 'destructive' }));
+        }
+      }
+      setActiveTimerId(null);
+      setStartTime(null);
+    } else {
+      // A different timer is running
+      if (activeTimerId) {
+        toast({ title: "Another timer is already running.", description: "Please stop the active timer before starting a new one.", variant: 'destructive' });
+        return;
+      }
+      // Start a new timer
+      setActiveTimerId(taskId);
+      setStartTime(new Date());
+      const task = tasks.find(t => t.id === taskId);
+      toast({ title: "Timer started!", description: `Timer for task "${task?.title}" has started.` });
+    }
+  };
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -148,14 +195,14 @@ export function KanbanBoard({ tasks, users, onUpdateTask }: KanbanBoardProps) {
         <div className="flex gap-4 overflow-x-auto">
             <SortableContext items={tasksId}>
             {taskContainers.map((container) => (
-                <KanbanColumn key={container.id} column={container} tasks={container.tasks} users={users} />
+                <KanbanColumn key={container.id} column={container} tasks={container.tasks} users={users} activeTimerId={activeTimerId} onTimerToggle={handleTimerToggle} />
             ))}
             </SortableContext>
         </div>
         {typeof document !== 'undefined' && createPortal(
             <div className="pointer-events-none">
               {activeTask && (
-                  <TaskCard task={activeTask} users={users} isOverlay />
+                  <TaskCard task={activeTask} users={users} isOverlay activeTimerId={activeTimerId} />
               )}
             </div>,
             document.body

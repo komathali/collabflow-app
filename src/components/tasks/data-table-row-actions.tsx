@@ -1,6 +1,6 @@
 'use client';
 
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, PlayCircle, StopCircle } from 'lucide-react';
 import { Row } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';
@@ -22,12 +22,17 @@ import { Task } from '@/lib/types';
 
 interface DataTableRowActionsProps<TData> {
   row: Row<TData>;
+  activeTimerId?: string | null;
+  onTimerToggle: (taskId: string) => void;
 }
 
 export function DataTableRowActions<TData>({
   row,
+  activeTimerId,
+  onTimerToggle
 }: DataTableRowActionsProps<TData>) {
   const task = row.original as Task;
+  const isTimerActive = activeTimerId === task.id;
 
   return (
     <DropdownMenu>
@@ -41,9 +46,16 @@ export function DataTableRowActions<TData>({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[160px]">
+        <DropdownMenuItem onClick={() => onTimerToggle(task.id)}>
+          {isTimerActive ? (
+            <StopCircle className="mr-2 h-4 w-4 text-red-500" />
+          ) : (
+            <PlayCircle className="mr-2 h-4 w-4" />
+          )}
+          <span>{isTimerActive ? 'Stop Timer' : 'Start Timer'}</span>
+        </DropdownMenuItem>
         <DropdownMenuItem>Edit</DropdownMenuItem>
         <DropdownMenuItem>Make a copy</DropdownMenuItem>
-        <DropdownMenuItem>Favorite</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuSub>
           <DropdownMenuSubTrigger>Status</DropdownMenuSubTrigger>

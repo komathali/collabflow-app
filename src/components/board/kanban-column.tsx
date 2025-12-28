@@ -12,9 +12,11 @@ type KanbanColumnProps = {
   };
   tasks: Task[];
   users: User[];
+  activeTimerId?: string | null;
+  onTimerToggle: (taskId: string) => void;
 };
 
-export function KanbanColumn({ column, tasks, users }: KanbanColumnProps) {
+export function KanbanColumn({ column, tasks, users, activeTimerId, onTimerToggle }: KanbanColumnProps) {
     const tasksIds = useMemo(() => {
         return tasks.map((task) => task.id);
     }, [tasks]);
@@ -46,7 +48,7 @@ export function KanbanColumn({ column, tasks, users }: KanbanColumnProps) {
             <div className="flex flex-grow flex-col gap-4 overflow-y-auto">
                  <SortableContext items={tasksIds}>
                     {tasks.map((task) => (
-                        <TaskCard key={task.id} task={task} users={users} />
+                        <TaskCard key={task.id} task={task} users={users} activeTimerId={activeTimerId} onTimerToggle={onTimerToggle} />
                     ))}
                 </SortableContext>
             </div>
