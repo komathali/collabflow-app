@@ -162,6 +162,7 @@ export function KanbanBoard({ tasks, users, onUpdateTask }: KanbanBoardProps) {
                 newContainers[activeContainerIndex].tasks.findIndex(t => t.id === activeId),
                 1
             );
+            movedTask.status = overContainer.title;
             newContainers[overContainerIndex].tasks.push(movedTask);
             return newContainers;
        });
@@ -174,14 +175,18 @@ export function KanbanBoard({ tasks, users, onUpdateTask }: KanbanBoardProps) {
     if (!over) return;
 
     const taskId = active.id as string;
-    const newStatus = over.data.current?.type === 'Column' ? over.id as TaskStatus : 
-                    taskContainers.find(c => c.tasks.some(t => t.id === over.id))?.title;
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
 
-    if (newStatus) {
-        const task = tasks.find(t => t.id === taskId);
-        if (task && task.status !== newStatus) {
-            onUpdateTask(taskId, { status: newStatus });
-        }
+    const overContainerId = over.data.current?.type === 'Column' 
+        ? over.id 
+        : over.data.current?.task?.projectId; // Fallback for dropping on task
+
+    const newContainer = taskContainers.find(c => c.id === over.id || c.tasks.some(t => t.id === over.id));
+
+
+    if (newContainer && task.status !== newContainer.title) {
+        onUpdateTask(taskId, { status: newContainer.title, projectId: task.projectId });
     }
   };
 

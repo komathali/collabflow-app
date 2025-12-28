@@ -1,4 +1,3 @@
-
 'use client';
 import { useUser } from '@/firebase';
 import { useDataService } from '@/hooks/useDataService';
@@ -8,7 +7,6 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
-import { MOCK_USERS } from '@/lib/data/mock-data';
 import { ScrollArea } from '../ui/scroll-area';
 import { cn } from '@/lib/utils';
 
@@ -107,4 +105,3 @@ export default function ProjectChat({ projectId }: { projectId: string }) {
     </div>
   );
 }
-    

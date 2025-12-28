@@ -1,4 +1,3 @@
-
 import { User as FirebaseAuthUser } from 'firebase/auth';
 
 export type User = {
@@ -91,6 +90,13 @@ export type WikiPage = {
     updatedAt: string;
 };
 
+export type StickyNote = {
+    id: string;
+    userId: string;
+    content: string;
+    createdAt: string;
+    updatedAt: string;
+}
 
 export type ActivityLog = {
   id: string;
@@ -168,6 +174,10 @@ export interface IDataService {
   updateWikiPage(projectId: string, pageId: string, data: Partial<WikiPage>): Promise<void>;
   deleteWikiPage(projectId: string, pageId: string): Promise<void>;
   
+  // Sticky Notes
+  onStickyNote(userId: string, callback: (note: StickyNote | null) => void): () => void;
+  saveStickyNote(userId: string, content: string): Promise<void>;
+
   // Time Tracking
   onTimeEntries(projectId: string, taskId: string, callback: (entries: TimeEntry[]) => void): () => void;
   addTimeEntry(entry: Omit<TimeEntry, 'id'>): Promise<void>;

@@ -6,8 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useDataService } from "@/hooks/useDataService";
-import { MOCK_TASKS, MOCK_USERS } from "@/lib/data/mock-data";
-import { Project, Task, User, ChatMessage as ChatMessageType, Comment } from "@/lib/types";
+import { Project, Task, User } from "@/lib/types";
 import { Calendar, CheckCircle, Clock, Flag, ListChecks, Users, MessageSquare, Image as ImageIcon, BookText, Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState, Suspense } from "react";
@@ -31,6 +30,7 @@ export default function ProjectOverviewPage() {
     const { projectId } = useParams();
     const [project, setProject] = useState<Project | null>(null);
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const dataService = useDataService();
 
@@ -43,6 +43,9 @@ export default function ProjectOverviewPage() {
                     
                     const projectTasks = await dataService.getTasksByProjectId(projectId);
                     setTasks(projectTasks);
+                    
+                    const allUsers = await dataService.getUsers();
+                    setUsers(allUsers);
                 } catch (error) {
                     console.error("Failed to fetch project data", error);
                     setProject(null);
@@ -66,7 +69,6 @@ export default function ProjectOverviewPage() {
     const progress = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
     
     const onUpdateTask = (taskId: string, values: Partial<Task>) => {
-        console.log(`Updating task ${taskId} with`, values);
         dataService.updateTask(taskId, { ...values, projectId: project.id });
         setTasks((currentTasks) =>
           currentTasks.map((task) =>
@@ -93,7 +95,7 @@ export default function ProjectOverviewPage() {
                         <Users className="w-4 h-4" />
                         <div className="flex -space-x-2">
                             {project.memberIds.map(id => {
-                                const user = MOCK_USERS.find(u => u.id === id);
+                                const user = users.find(u => u.id === id);
                                 return (
                                     <Avatar key={id} className="w-6 h-6 border-2 border-background">
                                         <AvatarImage src={user?.avatarUrl} />
@@ -130,7 +132,7 @@ export default function ProjectOverviewPage() {
                     </TabsTrigger>
                 </TabsList>
                 <TabsContent value="tasks" className="mt-4">
-                    <DataTable columns={columns} data={tasks} users={MOCK_USERS} onUpdateTask={onUpdateTask} />
+                    <DataTable columns={columns} data={tasks} users={users} onUpdateTask={onUpdateTask} />
                 </TabsContent>
                 <TabsContent value="notes" className="mt-4">
                     <Suspense fallback={<LoadingSpinner />}>

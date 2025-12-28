@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Textarea } from '../ui/textarea';
 import { useDataService } from '@/hooks/useDataService';
-import { ProofingComment } from '@/lib/types';
+import { ProofingComment, User } from '@/lib/types';
 import { useUser } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { cn } from '@/lib/utils';
@@ -24,6 +24,7 @@ interface ProofingToolProps {
 export default function ProofingTool({ projectId, documentId }: ProofingToolProps) {
   const [imageSrc, setImageSrc] = useState<string | null>("https://picsum.photos/seed/proofing/1200/800");
   const [comments, setComments] = useState<ProofingComment[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [activePopover, setActivePopover] = useState<string | 'new' | null>(null);
   const [newCommentCoords, setNewCommentCoords] = useState<{ x: number, y: number } | null>(null);
   const [newCommentText, setNewCommentText] = useState('');
@@ -35,6 +36,7 @@ export default function ProofingTool({ projectId, documentId }: ProofingToolProp
 
   useEffect(() => {
     const unsubscribe = dataService.onProofingComments(documentId, setComments);
+    dataService.getUsers().then(setUsers);
     return () => unsubscribe();
   }, [documentId, dataService]);
 
@@ -88,6 +90,8 @@ export default function ProofingTool({ projectId, documentId }: ProofingToolProp
       setNewCommentCoords(null);
       setNewCommentText('');
   }
+  
+  const getCommentUser = (userId: string) => users.find(u => u.id === userId);
 
   return (
     <Card>
@@ -130,11 +134,11 @@ export default function ProofingTool({ projectId, documentId }: ProofingToolProp
                             <PopoverContent align="start" className="w-80">
                                 <div className="flex items-start gap-3">
                                      <Avatar className="w-8 h-8">
-                                        <AvatarImage src={comment.userAvatar} />
-                                        <AvatarFallback>{comment.userName?.charAt(0)}</AvatarFallback>
+                                        <AvatarImage src={getCommentUser(comment.userId)?.avatarUrl} />
+                                        <AvatarFallback>{getCommentUser(comment.userId)?.name?.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1">
-                                        <p className="text-sm font-semibold">{comment.userName}</p>
+                                        <p className="text-sm font-semibold">{getCommentUser(comment.userId)?.name}</p>
                                         <p className="text-sm text-muted-foreground">{comment.content}</p>
                                     </div>
                                 </div>
@@ -189,7 +193,7 @@ export default function ProofingTool({ projectId, documentId }: ProofingToolProp
                             </div>
                             <div className="flex-1">
                                 <div className="flex justify-between items-center">
-                                    <p className="text-sm font-semibold">{comment.userName}</p>
+                                    <p className="text-sm font-semibold">{getCommentUser(comment.userId)?.name}</p>
                                     <p className="text-xs text-muted-foreground">{new Date(comment.createdAt).toLocaleDateString()}</p>
                                 </div>
                                 <p className="text-sm text-muted-foreground">{comment.content}</p>

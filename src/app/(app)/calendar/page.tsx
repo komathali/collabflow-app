@@ -8,17 +8,18 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { EventClickArg } from '@fullcalendar/core';
 import type { Calendar as CalendarApi } from '@fullcalendar/core';
 import { useDataService } from '@/hooks/useDataService';
-import { MOCK_TASKS } from '@/lib/data/mock-data';
 import type { Task } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { TaskDetailModal } from '@/components/tasks/task-detail-modal';
 import { CalendarDays } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useUser } from '@/firebase';
 
 export default function CalendarPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const dataService = useDataService();
+  const { user } = useUser();
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const calendarRef = useRef<FullCalendar>(null);
@@ -26,13 +27,22 @@ export default function CalendarPage() {
 
   useEffect(() => {
     const getTasks = async () => {
-      // In a real app, you'd fetch tasks from multiple projects
-      setTasks(MOCK_TASKS);
-      setLoading(false);
+      if (!user) return;
+      setLoading(true);
+      try {
+        const userProjects = await dataService.getProjects();
+        const taskPromises = userProjects.map(p => dataService.getTasksByProjectId(p.id));
+        const allTasks = await Promise.all(taskPromises);
+        setTasks(allTasks.flat());
+      } catch (error) {
+        console.error("Failed to fetch calendar tasks:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     getTasks();
-  }, [dataService]);
+  }, [dataService, user]);
 
   useEffect(() => {
     if (calendarRef.current) {

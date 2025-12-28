@@ -2,35 +2,42 @@
 
 import { useEffect, useState } from 'react';
 import { useDataService } from '@/hooks/useDataService';
-import { Task, User } from '@/lib/types';
-import { MOCK_TASKS, MOCK_USERS } from '@/lib/data/mock-data';
+import { Project, Task, User } from '@/lib/types';
 import { KanbanBoard } from '@/components/board/kanban-board';
+import { useUser } from '@/firebase';
 
 export default function BoardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const dataService = useDataService();
+  const { user } = useUser();
 
   useEffect(() => {
     const getTasks = async () => {
-      // This is where you might call `dataService.getTasks()`
-      setTasks(MOCK_TASKS);
-      setUsers(MOCK_USERS);
-      setLoading(false);
+      if (!user) return;
+      setLoading(true);
+      try {
+        const userProjects = await dataService.getProjects();
+        const taskPromises = userProjects.map(p => dataService.getTasksByProjectId(p.id));
+        const allTasks = await Promise.all(taskPromises);
+        setTasks(allTasks.flat());
+
+        const allUsers = await dataService.getUsers();
+        setUsers(allUsers);
+      } catch (error) {
+        console.error("Failed to fetch board data:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     getTasks();
-  }, [dataService]);
+  }, [dataService, user]);
 
   const onUpdateTask = (taskId: string, values: Partial<Task>) => {
-    // This is a mock implementation. In a real app, you would call `dataService.updateTask(taskId, values)`
-    console.log(`Updating task ${taskId} with`, values);
-    setTasks((currentTasks) =>
-      currentTasks.map((task) =>
-        task.id === taskId ? { ...task, ...values } : task
-      )
-    );
+    dataService.updateTask(taskId, values);
+    // Real-time listener will update the state automatically
   };
 
   if (loading) {

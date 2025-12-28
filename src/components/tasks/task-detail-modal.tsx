@@ -5,13 +5,11 @@ import { Task, User, Comment, TimeEntry } from '@/lib/types';
 import { Badge } from '../ui/badge';
 import { priorities, statuses } from './data';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { MOCK_USERS } from '@/lib/data/mock-data';
 import { Separator } from '../ui/separator';
 import { Button } from '../ui/button';
 import { FormEvent, useEffect, useState } from 'react';
 import { useDataService } from '@/hooks/useDataService';
 import { useUser } from '@/firebase';
-import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { SendHorizonal, Clock, PlusCircle } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
@@ -26,6 +24,7 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Checkbox } from '../ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '../ui/input';
 
 interface TaskDetailModalProps {
   isOpen: boolean;
@@ -46,6 +45,7 @@ export function TaskDetailModal({ isOpen, setIsOpen, task }: TaskDetailModalProp
     const dataService = useDataService();
     const { user } = useUser();
     const [comments, setComments] = useState<Comment[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
     const [newComment, setNewComment] = useState('');
     const [timeLogs, setTimeLogs] = useState<TimeEntry[]>([]);
     const [showTimeLogForm, setShowTimeLogForm] = useState(false);
@@ -64,6 +64,7 @@ export function TaskDetailModal({ isOpen, setIsOpen, task }: TaskDetailModalProp
 
         const unsubscribeComments = dataService.onTaskComments(task.projectId, task.id, setComments);
         const unsubscribeTimeLogs = dataService.onTimeEntries(task.projectId, task.id, setTimeLogs);
+        dataService.getUsers().then(setUsers);
 
         return () => {
             unsubscribeComments();
@@ -115,9 +116,10 @@ export function TaskDetailModal({ isOpen, setIsOpen, task }: TaskDetailModalProp
 
     if (!task) return null;
 
-    const assignee = MOCK_USERS.find(u => u.id === task.assigneeId);
+    const assignee = users.find(u => u.id === task.assigneeId);
     const priority = priorities.find(p => p.value === task.priority);
     const status = statuses.find(s => s.value === task.status);
+    const getCommentUser = (userId: string) => users.find(u => u.id === userId);
 
     const totalHours = timeLogs.reduce((acc, log) => acc + log.duration, 0);
 
@@ -225,15 +227,17 @@ export function TaskDetailModal({ isOpen, setIsOpen, task }: TaskDetailModalProp
                             <h3 className="font-semibold mb-4">Comments</h3>
                             <div className="space-y-4">
                                 <div className='space-y-4 max-h-64 overflow-y-auto pr-2'>
-                                    {comments.map(comment => (
+                                    {comments.map(comment => {
+                                        const commentUser = getCommentUser(comment.userId);
+                                        return (
                                         <div key={comment.id} className="flex items-start gap-3">
                                             <Avatar className="w-8 h-8">
-                                                <AvatarImage src={comment.userAvatar} />
-                                                <AvatarFallback>{comment.userName?.charAt(0)}</AvatarFallback>
+                                                <AvatarImage src={commentUser?.avatarUrl} />
+                                                <AvatarFallback>{commentUser?.name?.charAt(0)}</AvatarFallback>
                                             </Avatar>
                                             <div className="rounded-lg p-3 bg-muted w-full">
                                                 <div className='flex justify-between items-center mb-1'>
-                                                    <p className="text-sm font-semibold">{comment.userName}</p>
+                                                    <p className="text-sm font-semibold">{commentUser?.name}</p>
                                                      <p className="text-xs text-muted-foreground">
                                                         {new Date(comment.createdAt).toLocaleDateString()}
                                                     </p>
@@ -241,7 +245,7 @@ export function TaskDetailModal({ isOpen, setIsOpen, task }: TaskDetailModalProp
                                                 <p className='text-sm'>{comment.content}</p>
                                             </div>
                                         </div>
-                                    ))}
+                                    )})}
                                 </div>
                                 <form onSubmit={handleCommentSubmit} className="flex items-center gap-2">
                                     <Textarea

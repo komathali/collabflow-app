@@ -1,5 +1,4 @@
 'use client';
-import { MOCK_TASKS } from "@/lib/data/mock-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListTodo, CheckCircle2, MoreHorizontal, Clock, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +6,8 @@ import { cn } from "@/lib/utils";
 import type { TaskPriority } from "@/lib/types";
 import { useEffect, useState } from "react";
 import type { Task } from "@/lib/types";
+import { useDataService } from "@/hooks/useDataService";
+import { useUser } from "@/firebase";
 
 const priorityIcons: Record<TaskPriority, React.ReactNode> = {
   Urgent: <AlertCircle className="text-red-500" />,
@@ -23,14 +24,22 @@ const priorityColors: Record<TaskPriority, string> = {
 };
 
 export default function MyTasks() {
-  // This will be replaced with a call to the data service to get tasks for the current user.
   const [tasks, setTasks] = useState<Task[]>([]);
+  const dataService = useDataService();
+  const { user } = useUser();
   
   useEffect(() => {
-    setTasks(MOCK_TASKS)
-  }, []);
-
-  const openTasks = tasks.filter(t => t.status !== 'Done' && t.assigneeId === 'user-1');
+    if (!user) return;
+    const fetchTasks = async () => {
+      const allProjects = await dataService.getProjects();
+      const taskPromises = allProjects.map(p => dataService.getTasksByProjectId(p.id));
+      const allTasksNested = await Promise.all(taskPromises);
+      const allTasks = allTasksNested.flat();
+      const myTasks = allTasks.filter(t => t.assigneeId === user.uid && t.status !== 'Done');
+      setTasks(myTasks);
+    }
+    fetchTasks();
+  }, [user, dataService]);
 
   return (
     <Card>
@@ -42,9 +51,9 @@ export default function MyTasks() {
         <CardDescription>Tasks assigned to you that are not yet completed.</CardDescription>
       </CardHeader>
       <CardContent>
-        {openTasks.length > 0 ? (
+        {tasks.length > 0 ? (
           <ul className="space-y-4">
-            {openTasks.map(task => (
+            {tasks.map(task => (
               <li key={task.id} className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
                 <div className="flex items-center gap-4">
                    <div className={cn("p-1.5 rounded-full", priorityColors[task.priority])}>

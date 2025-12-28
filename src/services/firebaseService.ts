@@ -1,7 +1,5 @@
-
-
 'use client';
-import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage, TimeEntry, ActivityLog, Department, Employee } from "@/lib/types";
+import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage, TimeEntry, ActivityLog, Department, Employee, StickyNote } from "@/lib/types";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -552,6 +550,34 @@ class FirebaseService implements IDataService {
   async deleteWikiPage(projectId: string, pageId: string): Promise<void> {
     const pageRef = doc(this.firestore, `projects/${projectId}/wiki_pages`, pageId);
     await deleteDoc(pageRef);
+  }
+
+  // Sticky Notes
+  onStickyNote(userId: string, callback: (note: StickyNote | null) => void): () => void {
+    const noteRef = doc(this.firestore, `users/${userId}/sticky_notes/main`);
+    return onSnapshot(noteRef, (doc) => {
+        if (doc.exists()) {
+            const data = doc.data();
+            callback({
+                id: doc.id,
+                userId: data.userId,
+                content: data.content,
+                createdAt: data.createdAt?.toDate().toISOString(),
+                updatedAt: data.updatedAt?.toDate().toISOString(),
+            });
+        } else {
+            callback(null);
+        }
+    });
+  }
+
+  async saveStickyNote(userId: string, content: string): Promise<void> {
+    const noteRef = doc(this.firestore, `users/${userId}/sticky_notes/main`);
+    await setDoc(noteRef, {
+        userId,
+        content,
+        updatedAt: serverTimestamp()
+    }, { merge: true });
   }
 
   // Time Tracking
