@@ -16,26 +16,26 @@ export default function SettingsPage() {
             Admin Settings
           </h1>
           <p className="text-muted-foreground">
-            Manage your organization's users, departments, and roles.
+            Manage your organization's users, roles, and departments.
           </p>
         </div>
 
-        <Tabs defaultValue="users">
+        <Tabs defaultValue="departments">
           <TabsList>
-            <TabsTrigger value="users">
-              <Users className="mr-2 h-4 w-4" />
-              User Management
-            </TabsTrigger>
-            <TabsTrigger value="departments">
+             <TabsTrigger value="departments">
               <Building className="mr-2 h-4 w-4" />
               Departments
             </TabsTrigger>
+            <TabsTrigger value="users">
+              <Users className="mr-2 h-4 w-4" />
+              User Roles
+            </TabsTrigger>
           </TabsList>
-          <TabsContent value="users" className="mt-4">
-            <UserManagement />
-          </TabsContent>
           <TabsContent value="departments" className="mt-4">
             <DepartmentManager />
+          </TabsContent>
+          <TabsContent value="users" className="mt-4">
+            <UserManagement />
           </TabsContent>
         </Tabs>
       </div>

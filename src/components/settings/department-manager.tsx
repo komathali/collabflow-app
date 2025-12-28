@@ -42,7 +42,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { useUser } from '@/firebase';
 
 export function DepartmentManager() {
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -59,7 +58,6 @@ export function DepartmentManager() {
   });
 
   const dataService = useDataService();
-  const { user: currentUser } = useUser();
   const { toast } = useToast();
 
   const fetchData = async () => {
@@ -81,7 +79,6 @@ export function DepartmentManager() {
   }
 
   useEffect(() => {
-    setIsLoading(true);
     fetchData();
   }, [dataService]);
 
@@ -135,7 +132,7 @@ export function DepartmentManager() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-full">
+      <div className="flex justify-center items-center h-64">
         <Loader2 className="animate-spin" />
       </div>
     );
@@ -143,70 +140,72 @@ export function DepartmentManager() {
 
   return (
     <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Departments & Employees</CardTitle>
-            <CardDescription>
-              Manage organizational structure.
-            </CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setIsDeptModalOpen(true)}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              New Department
-            </Button>
-            <Button onClick={() => setIsEmployeeModalOpen(true)} variant="outline">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Add Employee
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {departments.length > 0 ? departments.map(dept => (
-              <div key={dept.id}>
-                <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <Building className="h-5 w-5" />
-                        {dept.name}
-                    </h3>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                          <AlertDialogDescription>This will delete the department. Make sure no employees are assigned to it first.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDeleteDepartment(dept.id)}>Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                </div>
-                <ul className="pl-6 space-y-2 text-sm text-muted-foreground border-l ml-2">
-                  {employees
-                    .filter(emp => emp.departmentId === dept.id)
-                    .map(emp => (
-                      <li key={emp.id} className="flex justify-between items-center">
-                        <span>{getUserName(emp.userId)} - <i className="text-xs">{emp.title}</i></span>
-                         <Button variant="ghost" size="icon" onClick={() => handleDeleteEmployee(emp.id)}><Trash2 className="h-4 w-4 text-destructive/50 hover:text-destructive" /></Button>
-                      </li>
-                    ))}
-                    {employees.filter(emp => emp.departmentId === dept.id).length === 0 && (
-                        <li className="text-xs italic">No employees assigned.</li>
-                    )}
-                </ul>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold">Organization Structure</h2>
+          <p className="text-muted-foreground">
+            Manage departments and employee assignments.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => setIsDeptModalOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            New Department
+          </Button>
+          <Button onClick={() => setIsEmployeeModalOpen(true)} variant="outline">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add Employee
+          </Button>
+        </div>
+      </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {departments.map(dept => (
+          <Card key={dept.id}>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
+                <CardTitle className="text-lg">{dept.name}</CardTitle>
               </div>
-            )) : (
-              <p className="text-sm text-muted-foreground text-center py-4">No departments created yet.</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>This will delete the department. Make sure no employees are assigned to it first.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => handleDeleteDepartment(dept.id)}>Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 text-sm">
+                {employees
+                  .filter(emp => emp.departmentId === dept.id)
+                  .map(emp => (
+                    <li key={emp.id} className="flex justify-between items-center group">
+                      <div>
+                        <p className="font-medium">{getUserName(emp.userId)}</p>
+                        <p className="text-xs text-muted-foreground">{emp.title}</p>
+                      </div>
+                       <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100" onClick={() => handleDeleteEmployee(emp.id)}><Trash2 className="h-4 w-4 text-destructive/70 hover:text-destructive" /></Button>
+                    </li>
+                  ))}
+                  {employees.filter(emp => emp.departmentId === dept.id).length === 0 && (
+                      <li className="text-xs text-muted-foreground italic text-center py-4">No employees assigned.</li>
+                  )}
+              </ul>
+            </CardContent>
+          </Card>
+        ))}
+        {departments.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-4 col-span-3">No departments created yet.</p>
+        )}
+      </div>
 
       {/* Create Department Modal */}
       <Dialog open={isDeptModalOpen} onOpenChange={setIsDeptModalOpen}>
@@ -284,7 +283,7 @@ export function DepartmentManager() {
             </div>
             <div>
                 <Label htmlFor="employee-title">Job Title</Label>
-                <Input id="employee-title" placeholder="e.g., Software Engineer" value={newEmployee.title} onChange={e => setNewEmployee(emp => ({...emp, title: e.target.value}))} />
+                <Input id="employee-title" placeholder="e.g., Director, Manager, Engineer" value={newEmployee.title} onChange={e => setNewEmployee(emp => ({...emp, title: e.target.value}))} />
             </div>
           </div>
           <DialogFooter>
