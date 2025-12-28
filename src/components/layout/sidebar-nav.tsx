@@ -14,7 +14,6 @@ import {
   LayoutDashboard,
   KanbanSquare,
   ListTodo,
-  BrainCircuit,
   Settings,
   GanttChartSquare,
   LogOut,
@@ -35,7 +34,6 @@ const menuItems = [
   { href: '/calendar', label: 'Calendar', icon: CalendarDays },
   { href: '/reporting', label: 'Reporting', icon: BarChartHorizontal },
   { href: '/activities', label: 'All Activities', icon: History },
-  { href: '/summary', label: 'AI Summary', icon: BrainCircuit },
 ];
 
 export function SidebarNav() {

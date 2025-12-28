@@ -68,15 +68,15 @@ export default function LandingPage() {
                 <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm">Key Features</div>
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Everything you need to succeed</h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  From task management to AI-powered summaries, CollabFlow provides the tools for modern teams to excel.
+                  From task management to personal dashboards, CollabFlow provides the tools for modern teams to excel.
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-2 mt-12">
+            <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3 mt-12">
               <div className="grid gap-1">
                 <KanbanSquare className="h-8 w-8 text-primary" />
                 <h3 className="text-lg font-bold">Project Views</h3>
-                <p className="text-sm text-muted-foreground">Visualize your work your way with dynamic Tables, Kanban boards, and Gantt charts.</p>
+                <p className="text-sm text-muted-foreground">Visualize your work your way with dynamic Tables, Kanban boards, and Calendars.</p>
               </div>
               <div className="grid gap-1">
                 <Network className="h-8 w-8 text-primary" />
@@ -87,11 +87,6 @@ export default function LandingPage() {
                 <CheckCircle className="h-8 w-8 text-primary" />
                 <h3 className="text-lg font-bold">Personal Dashboards</h3>
                 <p className="text-sm text-muted-foreground">Stay on top of your day with a personal "Me View" showing your tasks, agenda, and notes.</p>
-              </div>
-              <div className="grid gap-1">
-                <BrainCircuit className="h-8 w-8 text-primary" />
-                <h3 className="text-lg font-bold">AI Meeting Summaries</h3>
-                <p className="text-sm text-muted-foreground">Instantly generate summaries, key decisions, and action items from your meeting notes.</p>
               </div>
             </div>
           </div>
