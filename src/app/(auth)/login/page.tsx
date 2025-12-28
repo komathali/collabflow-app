@@ -23,7 +23,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await dataService.login(email, password);
-      router.push('/');
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Failed to log in.');
     }

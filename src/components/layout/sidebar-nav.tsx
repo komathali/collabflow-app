@@ -28,7 +28,7 @@ import Link from 'next/link';
 import { useDataService } from '@/hooks/useDataService';
 
 const menuItems = [
-  { href: '/', label: 'My Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'My Dashboard', icon: LayoutDashboard },
   { href: '/projects', label: 'Projects', icon: FolderKanban },
   { href: '/tasks', label: 'Tasks', icon: ListTodo },
   { href: '/board', label: 'Board', icon: KanbanSquare },
