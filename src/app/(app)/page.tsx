@@ -1,4 +1,3 @@
-
 'use client';
 import ActivityFeed from "@/components/dashboard/activity-feed";
 import MyAgenda from "@/components/dashboard/my-agenda";
