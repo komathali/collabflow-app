@@ -27,7 +27,7 @@ const LoadingSpinner = () => (
     </div>
 );
 
-export function ProjectNotes({ projectId }: { projectId: string }) {
+export default function ProjectNotes({ projectId }: { projectId: string }) {
   const [pages, setPages] = useState<WikiPage[]>([]);
   const [selectedPage, setSelectedPage] = useState<WikiPage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,7 +62,7 @@ export function ProjectNotes({ projectId }: { projectId: string }) {
       const newPage = await dataService.createWikiPage(projectId, newPageTitle);
       setSelectedPage(newPage);
       setNewPageTitle('');
-    } catch (error) => {
+    } catch (error) {
       console.error('Failed to create page:', error);
       toast({
         title: 'Error creating page',
@@ -77,7 +77,7 @@ export function ProjectNotes({ projectId }: { projectId: string }) {
     try {
       await dataService.deleteWikiPage(projectId, pageId);
       toast({ title: 'Page deleted' });
-    } catch (error) => {
+    } catch (error) {
       console.error('Failed to delete page:', error);
       toast({
         title: 'Error deleting page',
