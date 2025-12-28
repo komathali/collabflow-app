@@ -1,3 +1,4 @@
+
 'use client';
 import { IDataService, Project, User } from "@/lib/types";
 import {
@@ -18,6 +19,9 @@ import {
   where,
   doc,
   setDoc,
+  getDoc,
+  updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { initializeFirebase } from "@/firebase";
 
@@ -51,13 +55,15 @@ class FirebaseService implements IDataService {
       const user = userCredential.user;
       
       if (user) {
+        // Note: Using the user's UID as the document ID in the 'users' collection.
         const userRef = doc(this.firestore, "users", user.uid);
         const newUser: Omit<User, 'id'> = {
           name: displayName,
           email: user.email!,
           avatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
-          role: 'Admin', // Default role
+          role: 'Admin', // Default role for new sign-ups.
         };
+        // Use setDoc to explicitly set the document with the user's UID.
         await setDoc(userRef, newUser);
       }
       
@@ -87,6 +93,23 @@ class FirebaseService implements IDataService {
     return onAuthStateChanged(this.auth, callback);
   }
 
+  async getUsers(): Promise<User[]> {
+    const usersCol = collection(this.firestore, "users");
+    const querySnapshot = await getDocs(usersCol);
+    const users: User[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      users.push({
+        id: doc.id,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        avatarUrl: data.avatarUrl,
+      });
+    });
+    return users;
+  }
+
   async getProjects(): Promise<Project[]> {
     const user = await this.getUser();
     if (!user) {
@@ -107,9 +130,30 @@ class FirebaseService implements IDataService {
         ownerId: data.ownerId,
         memberIds: data.memberIds,
         createdAt: data.createdAt?.toDate().toISOString() || new Date().toISOString(),
+        startDate: data.startDate,
+        endDate: data.endDate,
       });
     });
     return projects;
+  }
+  
+  async getProjectById(id: string): Promise<Project | undefined> {
+    const docRef = doc(this.firestore, "projects", id);
+    const docSnap = await getDoc(docRef);
+    if(docSnap.exists()){
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        name: data.name,
+        description: data.description,
+        ownerId: data.ownerId,
+        memberIds: data.memberIds,
+        createdAt: data.createdAt?.toDate().toISOString() || new Date().toISOString(),
+        startDate: data.startDate,
+        endDate: data.endDate,
+      };
+    }
+    return undefined;
   }
 
   async createProject(project: Omit<Project, 'id' | 'createdAt' | 'ownerId' | 'memberIds'>): Promise<Project> {
@@ -122,17 +166,26 @@ class FirebaseService implements IDataService {
     const docRef = await addDoc(projectsCol, {
       ...project,
       ownerId: user.uid,
-      memberIds: [user.uid],
+      memberIds: [user.uid, ...(project.memberIds || [])], // Ensure owner is a member
       createdAt: serverTimestamp(),
     });
 
-    return {
-      ...project,
-      id: docRef.id,
-      ownerId: user.uid,
-      memberIds: [user.uid],
-      createdAt: new Date().toISOString(),
-    };
+    const newProject = await this.getProjectById(docRef.id);
+    if(!newProject) {
+      throw new Error("Failed to create project.");
+    }
+    return newProject;
+  }
+
+  async updateProject(id: string, project: Partial<Project>): Promise<Project | undefined> {
+    const docRef = doc(this.firestore, "projects", id);
+    await updateDoc(docRef, project);
+    return this.getProjectById(id);
+  }
+
+  async deleteProject(id: string): Promise<void> {
+    const docRef = doc(this.firestore, "projects", id);
+    await deleteDoc(docRef);
   }
 }
 

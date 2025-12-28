@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -17,6 +18,7 @@ import {
   Settings,
   GanttChartSquare,
   LogOut,
+  FolderKanban,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -24,6 +26,7 @@ import { useDataService } from '@/hooks/useDataService';
 
 const menuItems = [
   { href: '/', label: 'My Dashboard', icon: LayoutDashboard },
+  { href: '/projects', label: 'Projects', icon: FolderKanban },
   { href: '/tasks', label: 'Tasks', icon: ListTodo },
   { href: '/board', label: 'Board', icon: KanbanSquare },
   { href: '/summary', label: 'AI Summary', icon: BrainCircuit },
@@ -56,7 +59,7 @@ export function SidebarNav() {
             <SidebarMenuItem key={item.href}>
               <Link href={item.href}>
                 <SidebarMenuButton
-                  isActive={pathname === item.href}
+                  isActive={pathname.startsWith(item.href) && (item.href !== '/' || pathname === '/')}
                   tooltip={item.label}
                 >
                   <item.icon />

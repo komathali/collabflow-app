@@ -1,3 +1,4 @@
+
 import { User as FirebaseAuthUser } from 'firebase/auth';
 
 export type User = {
@@ -15,6 +16,8 @@ export type Project = {
   ownerId: string;
   memberIds: string[];
   createdAt: string;
+  startDate?: string;
+  endDate?: string;
 };
 
 export type TaskStatus = 'To-Do' | 'In Progress' | 'In Review' | 'Done';
@@ -29,6 +32,7 @@ export type Task = {
   dueDate?: string;
   tags: string[];
   projectId: string;
+  isMilestone?: boolean;
 };
 
 export type ActivityLog = {
@@ -47,8 +51,12 @@ export interface IDataService {
   signUp(email: string, password: string, displayName: string): Promise<FirebaseAuthUser | null>
   getUser(): Promise<FirebaseAuthUser | null>;
   onAuthStateChange(callback: (user: FirebaseAuthUser | null) => void): () => void;
+  getUsers(): Promise<User[]>;
 
   // Data
   getProjects(): Promise<Project[]>;
+  getProjectById(id: string): Promise<Project | undefined>;
   createProject(project: Omit<Project, 'id' | 'createdAt' | 'ownerId' | 'memberIds'>): Promise<Project>;
+  updateProject(id: string, project: Partial<Project>): Promise<Project | undefined>;
+  deleteProject(id: string): Promise<void>;
 }
