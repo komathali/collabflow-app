@@ -1,7 +1,6 @@
 
-
 'use client';
-import { IDataService, Project, Task, User, ChatMessage, Comment } from "@/lib/types";
+import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment } from "@/lib/types";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -320,8 +319,45 @@ class FirebaseService implements IDataService {
           userAvatar: user.photoURL,
       });
   }
+
+  onProofingComments(documentId: string, callback: (comments: ProofingComment[]) => void): () => void {
+    const commentsCol = collection(this.firestore, `proofing_comments`);
+    const q = query(commentsCol, where("documentId", "==", documentId), orderBy("createdAt", "asc"));
+
+    return onSnapshot(q, (querySnapshot) => {
+        const comments: ProofingComment[] = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            comments.push({
+                id: doc.id,
+                userId: data.userId,
+                documentId: data.documentId,
+                x: data.x,
+                y: data.y,
+                content: data.content,
+                createdAt: data.createdAt?.toDate().toISOString(),
+                userName: data.userName,
+                userAvatar: data.userAvatar,
+            });
+        });
+        callback(comments);
+    });
+  }
+
+  async addProofingComment(documentId: string, comment: Omit<ProofingComment, 'id' | 'createdAt' | 'userId' | 'userName' | 'userAvatar'>): Promise<void> {
+      const user = this.auth.currentUser;
+      if (!user) throw new Error("User not authenticated");
+
+      const commentsCol = collection(this.firestore, 'proofing_comments');
+      await addDoc(commentsCol, {
+          ...comment,
+          documentId,
+          userId: user.uid,
+          userName: user.displayName,
+          userAvatar: user.photoURL,
+          createdAt: serverTimestamp(),
+      });
+  }
 }
 
 export const firebaseService = new FirebaseService();
-
-    

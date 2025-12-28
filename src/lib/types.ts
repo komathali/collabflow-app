@@ -58,6 +58,18 @@ export type ChatMessage = {
     senderAvatar?: string;
 };
 
+export type ProofingComment = {
+    id: string;
+    userId: string;
+    documentId: string;
+    x: number;
+    y: number;
+    content: string;
+    createdAt: string;
+    userName: string;
+    userAvatar?: string;
+};
+
 
 export type ActivityLog = {
   id: string;
@@ -93,6 +105,10 @@ export interface IDataService {
   sendChatMessage(projectId: string, content: string): Promise<void>;
   onTaskComments(projectId: string, taskId: string, callback: (comments: Comment[]) => void): () => void;
   addTaskComment(projectId: string, taskId: string, content: string): Promise<void>;
+
+  // Proofing
+  onProofingComments(documentId: string, callback: (comments: ProofingComment[]) => void): () => void;
+  addProofingComment(documentId: string, comment: Omit<ProofingComment, 'id' | 'createdAt' | 'userId' | 'userName' | 'userAvatar'>): Promise<void>;
 }
 
     

@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { useDataService } from "@/hooks/useDataService";
 import { MOCK_TASKS, MOCK_USERS } from "@/lib/data/mock-data";
 import { Project, Task, User, ChatMessage as ChatMessageType, Comment } from "@/lib/types";
-import { Calendar, CheckCircle, Clock, Flag, ListChecks, Users, MessageSquare } from "lucide-react";
+import { Calendar, CheckCircle, Clock, Flag, ListChecks, Users, MessageSquare, Image as ImageIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DataTable } from '@/components/tasks/data-table';
@@ -17,6 +17,7 @@ import { columns } from '@/components/tasks/columns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectChat from "@/components/project/project-chat";
 import { useUser } from "@/firebase";
+import ProofingTool from "@/components/proofing/proofing-tool";
 
 export default function ProjectOverviewPage() {
     const { projectId } = useParams();
@@ -111,6 +112,10 @@ export default function ProjectOverviewPage() {
                         <MessageSquare className="mr-2 h-4 w-4"/>
                         Chat
                     </TabsTrigger>
+                    <TabsTrigger value="proofing">
+                        <ImageIcon className="mr-2 h-4 w-4"/>
+                        Proofing
+                    </TabsTrigger>
                 </TabsList>
                 <TabsContent value="tasks" className="mt-4">
                     <DataTable columns={columns} data={tasks} users={MOCK_USERS} onUpdateTask={onUpdateTask} />
@@ -118,9 +123,10 @@ export default function ProjectOverviewPage() {
                 <TabsContent value="chat" className="mt-4">
                     <ProjectChat projectId={project.id} />
                 </TabsContent>
+                <TabsContent value="proofing" className="mt-4">
+                    <ProofingTool projectId={project.id} documentId="mock-doc-1" />
+                </TabsContent>
             </Tabs>
         </div>
     );
 }
-
-    

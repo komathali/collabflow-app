@@ -1,6 +1,6 @@
 
 
-import { IDataService, Project, Task, User, ChatMessage, Comment } from "@/lib/types";
+import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment } from "@/lib/types";
 import { User as FirebaseAuthUser } from "firebase/auth";
 
 class SupabaseService implements IDataService {
@@ -55,8 +55,12 @@ class SupabaseService implements IDataService {
   addTaskComment(projectId: string, taskId: string, content: string): Promise<void> {
       throw new Error("Method not implemented.");
   }
+  onProofingComments(documentId: string, callback: (comments: ProofingComment[]) => void): () => void {
+      throw new Error("Method not implemented.");
+  }
+  addProofingComment(documentId: string, comment: Omit<ProofingComment, "id" | "createdAt" | "userId" | "userName" | "userAvatar">): Promise<void> {
+      throw new Error("Method not implemented.");
+  }
 }
 
 export const supabaseService = new SupabaseService();
-
-    
