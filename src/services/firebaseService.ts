@@ -81,8 +81,8 @@ class FirebaseService implements IDataService {
         const userRef = doc(this.firestore, "users", user.uid);
         // First user is always an Admin
         const usersCol = collection(this.firestore, 'users');
-        const userDocs = await getDocs(usersCol);
-        const role = userDocs.empty ? 'Admin' : 'Member';
+        const userDocs = await getDocs(query(usersCol, limit(2))); // check if any other user exists
+        const role = userDocs.docs.length > 1 ? 'Member' : 'Admin';
 
         await setDoc(userRef, {
           id: user.uid,
@@ -185,11 +185,9 @@ class FirebaseService implements IDataService {
 
   async createEmployee(employee: Omit<Employee, 'id'>): Promise<Employee> {
     const empCol = collection(this.firestore, 'employees');
-    // Check if user is already an employee
-    const q = query(empCol, where('userId', '==', employee.userId));
+    const q = query(empCol, where('userId', '==', employee.userId), where('departmentId', '==', employee.departmentId));
     const existing = await getDocs(q);
     if (!existing.empty) {
-        // User is already an employee, update their record
         const existingDoc = existing.docs[0];
         await updateDoc(existingDoc.ref, employee);
         return { id: existingDoc.id, ...employee };
