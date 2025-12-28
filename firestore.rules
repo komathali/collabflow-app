@@ -1,4 +1,5 @@
 
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -30,6 +31,20 @@ service cloud.firestore {
       return isOwner(userId) && resource != null;
     }
     
+    /**
+     * Retrieves the data for a given document.
+     */
+    function getDoc(path) {
+      return get(/databases/$(database)/documents/$(path)).data;
+    }
+    
+    /**
+     * Returns true if the requesting user is an Admin.
+     */
+    function isAdmin() {
+        return isSignedIn() && getDoc('users/' + request.auth.uid).role == 'Admin';
+    }
+
     /**
      * Retrieves the data for a given project document.
      */
@@ -78,16 +93,29 @@ service cloud.firestore {
     }
 
     // ------------------------------------------------------------------
-    // User Data
+    // User Data & Admin
     // ------------------------------------------------------------------
 
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false; // Prevent listing all users
+      allow get: if isSignedIn();
+      allow list: if isAdmin();
+      // Allow user creation.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if false; // User profiles are generally not deleted
+      // Allow user to update their own info. Admins can update anyone's info.
+      allow update: if (isExistingOwner(userId) && request.resource.data.id == resource.data.id) || isAdmin();
+      allow delete: if false;
     }
+    
+    match /departments/{departmentId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin();
+    }
+    
+    match /employees/{employeeId} {
+        allow read: if isSignedIn();
+        allow write: if isAdmin();
+    }
+
 
     match /users/{userId}/sticky_notes/{stickyNoteId} {
       allow get, list: if isOwner(userId);
@@ -185,5 +213,3 @@ service cloud.firestore {
 
   }
 }
-
-    

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -63,7 +64,7 @@ export function SidebarNav() {
             <SidebarMenuItem key={item.href}>
               <Link href={item.href}>
                 <SidebarMenuButton
-                  isActive={pathname.startsWith(item.href) && (item.href !== '/' || pathname === '/')}
+                  isActive={pathname.startsWith(item.href) && (item.href !== '/dashboard' || pathname === '/dashboard')}
                   tooltip={item.label}
                 >
                   <item.icon />
@@ -78,10 +79,12 @@ export function SidebarNav() {
       <SidebarFooter className="p-2">
          <SidebarMenu>
             <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Settings">
+              <Link href="/settings">
+                <SidebarMenuButton tooltip="Settings" isActive={pathname === '/settings'}>
                     <Settings />
                     <span>Settings</span>
                 </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
              <SidebarMenuItem>
                 <SidebarMenuButton tooltip="Logout" onClick={handleLogout}>

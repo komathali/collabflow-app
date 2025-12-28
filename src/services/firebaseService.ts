@@ -1,6 +1,7 @@
 
+
 'use client';
-import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage, TimeEntry, ActivityLog } from "@/lib/types";
+import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage, TimeEntry, ActivityLog, Department, Employee } from "@/lib/types";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -30,6 +31,7 @@ import {
   collectionGroup,
   limit,
   Firestore,
+  writeBatch,
 } from "firebase/firestore";
 import { initializeFirebase } from "@/firebase";
 
@@ -79,12 +81,17 @@ class FirebaseService implements IDataService {
       if (user) {
         await updateProfile(user, { displayName });
         const userRef = doc(this.firestore, "users", user.uid);
+        // First user is always an Admin
+        const usersCol = collection(this.firestore, 'users');
+        const userDocs = await getDocs(usersCol);
+        const role = userDocs.empty ? 'Admin' : 'Member';
+
         await setDoc(userRef, {
           id: user.uid,
           name: displayName,
           email: user.email!,
           avatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
-          role: 'Admin',
+          role,
         });
       }
       
@@ -129,6 +136,74 @@ class FirebaseService implements IDataService {
       });
     });
     return users;
+  }
+  
+  async getUserById(id: string): Promise<User | undefined> {
+    const docRef = doc(this.firestore, 'users', id);
+    const docSnap = await getDoc(docRef);
+    if(docSnap.exists()){
+      return docSnap.data() as User;
+    }
+    return undefined;
+  }
+  
+  async updateUser(id: string, data: Partial<User>): Promise<void> {
+    const userRef = doc(this.firestore, 'users', id);
+    await updateDoc(userRef, data);
+
+    if (data.name && this.auth.currentUser && this.auth.currentUser.uid === id) {
+        await updateProfile(this.auth.currentUser, { displayName: data.name });
+    }
+  }
+
+  async getDepartments(): Promise<Department[]> {
+    const deptsCol = collection(this.firestore, 'departments');
+    const q = query(deptsCol, orderBy('name', 'asc'));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Department));
+  }
+
+  async createDepartment(name: string): Promise<Department> {
+    const deptCol = collection(this.firestore, 'departments');
+    const docRef = await addDoc(deptCol, { name });
+    return { id: docRef.id, name };
+  }
+  
+  async deleteDepartment(id: string): Promise<void> {
+    // Check if any employees are in this department
+    const empQuery = query(collection(this.firestore, 'employees'), where('departmentId', '==', id), limit(1));
+    const empSnap = await getDocs(empQuery);
+    if(!empSnap.empty) {
+        throw new Error("Cannot delete department with employees in it.");
+    }
+    await deleteDoc(doc(this.firestore, 'departments', id));
+  }
+
+  async getEmployees(): Promise<Employee[]> {
+    const empCol = collection(this.firestore, 'employees');
+    const snapshot = await getDocs(empCol);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Employee));
+  }
+
+  async createEmployee(employee: Omit<Employee, 'id'>): Promise<Employee> {
+    const empCol = collection(this.firestore, 'employees');
+    // Check if user is already an employee
+    const q = query(empCol, where('userId', '==', employee.userId));
+    const existing = await getDocs(q);
+    if (!existing.empty) {
+        // User is already an employee, update their record
+        const existingDoc = existing.docs[0];
+        await updateDoc(existingDoc.ref, employee);
+        return { id: existingDoc.id, ...employee };
+    }
+    
+    // Add new employee
+    const docRef = await addDoc(empCol, employee);
+    return { id: docRef.id, ...employee };
+  }
+
+  async deleteEmployee(id: string): Promise<void> {
+    await deleteDoc(doc(this.firestore, 'employees', id));
   }
 
   async getProjects(): Promise<Project[]> {

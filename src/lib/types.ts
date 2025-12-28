@@ -1,3 +1,4 @@
+
 import { User as FirebaseAuthUser } from 'firebase/auth';
 
 export type User = {
@@ -6,6 +7,18 @@ export type User = {
   email: string;
   avatarUrl?: string;
   role: 'Admin' | 'Member' | 'Guest';
+};
+
+export type Department = {
+    id: string;
+    name: string;
+};
+
+export type Employee = {
+    id: string;
+    userId: string;
+    departmentId: string;
+    title: string;
 };
 
 export type Project = {
@@ -113,7 +126,19 @@ export interface IDataService {
   signUp(email: string, password: string, displayName: string): Promise<FirebaseAuthUser | null>
   getUser(): Promise<FirebaseAuthUser | null>;
   onAuthStateChange(callback: (user: FirebaseAuthUser | null) => void): () => void;
+  
+  // Users
   getUsers(): Promise<User[]>;
+  getUserById(id: string): Promise<User | undefined>;
+  updateUser(id: string, data: Partial<User>): Promise<void>;
+
+  // Departments & Employees
+  getDepartments(): Promise<Department[]>;
+  createDepartment(name: string): Promise<Department>;
+  deleteDepartment(id: string): Promise<void>;
+  getEmployees(): Promise<Employee[]>;
+  createEmployee(employee: Omit<Employee, 'id'>): Promise<Employee>;
+  deleteEmployee(id: string): Promise<void>;
 
   // Data
   getProjects(): Promise<Project[]>;

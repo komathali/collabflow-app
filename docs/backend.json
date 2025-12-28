@@ -37,6 +37,30 @@
         "email"
       ]
     },
+    "Department": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Department",
+        "type": "object",
+        "description": "Represents an organizational department.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique ID for the department." },
+            "name": { "type": "string", "description": "Name of the department." }
+        },
+        "required": ["id", "name"]
+    },
+    "Employee": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "Employee",
+        "type": "object",
+        "description": "Links a User to a Department with a specific title.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique ID for the employee record." },
+            "userId": { "type": "string", "description": "Reference to User ID." },
+            "departmentId": { "type": "string", "description": "Reference to Department ID." },
+            "title": { "type": "string", "description": "The employee's job title (e.g., Director, Manager, Engineer)." }
+        },
+        "required": ["id", "userId", "departmentId", "title"]
+    },
     "Project": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Project",
@@ -509,16 +533,21 @@
         "path": "/users/{userId}",
         "definition": {
           "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profiles. Path-based ownership ensures only the user can access their own profile.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user."
-            }
-          ]
+          "schema": { "$ref": "#/backend/entities/User" }
+        }
+      },
+      {
+        "path": "/departments/{departmentId}",
+        "definition": {
+          "entityName": "Department",
+          "schema": { "$ref": "#/backend/entities/Department" }
+        }
+      },
+      {
+        "path": "/employees/{employeeId}",
+        "definition": {
+          "entityName": "Employee",
+          "schema": { "$ref": "#/backend/entities/Employee" }
         }
       },
       {
