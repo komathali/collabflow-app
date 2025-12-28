@@ -5,15 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
-import { useDataService } from '@/hooks/useDataService';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { GanttChartSquare } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, getFirestore, setDoc } from 'firebase/firestore';
 
 export default function SignUpPage() {
-  const dataService = useDataService();
+  const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
   const [displayName, setDisplayName] = useState('');
@@ -25,12 +27,26 @@ export default function SignUpPage() {
     e.preventDefault();
     setError(null);
     try {
-      await dataService.signUp(email, password, displayName);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      await updateProfile(user, { displayName });
+
+      const db = getFirestore(auth.app);
+      const userRef = doc(db, "users", user.uid);
+      await setDoc(userRef, {
+        id: user.uid,
+        name: displayName,
+        email: user.email!,
+        avatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
+        role: 'Admin',
+      });
+
       toast({
         title: 'Account Created!',
         description: 'Welcome to CollabFlow. You are now being redirected.',
       });
-      router.push('/');
+      router.push('/dashboard');
     } catch (err: any) {
       setError(err.message || 'Failed to sign up.');
     }
