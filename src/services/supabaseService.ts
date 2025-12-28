@@ -8,7 +8,13 @@ class SupabaseService implements IDataService {
   logout(): Promise<void> {
     throw new Error("Method not implemented.");
   }
+  signUp(email: string, password: string, displayName: string): Promise<FirebaseAuthUser | null> {
+    throw new Error("Method not implemented.");
+  }
   getUser(): Promise<FirebaseAuthUser | null> {
+    throw new Error("Method not implemented.");
+  }
+  onAuthStateChange(callback: (user: FirebaseAuthUser | null) => void): () => void {
     throw new Error("Method not implemented.");
   }
   getProjects(): Promise<Project[]> {

@@ -1,4 +1,4 @@
-import { taskService } from "@/lib/data/service";
+import { MOCK_TASKS } from "@/lib/data/mock-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ListTodo, CheckCircle2, MoreHorizontal, Clock, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -20,9 +20,9 @@ const priorityColors: Record<TaskPriority, string> = {
 };
 
 export default async function MyTasks() {
-  // Assuming 'user-1' is the current logged-in user for this mock.
-  const tasks = await taskService.getTasksByAssignee('user-1');
-  const openTasks = tasks.filter(t => t.status !== 'Done');
+  // This will be replaced with a call to the data service to get tasks for the current user.
+  const tasks = MOCK_TASKS;
+  const openTasks = tasks.filter(t => t.status !== 'Done' && t.assigneeId === 'user-1');
 
   return (
     <Card>

@@ -1,10 +1,12 @@
 'use client';
-import { IDataService, Project } from "@/lib/types";
+import { IDataService, Project, User } from "@/lib/types";
 import {
   getAuth,
   signInWithEmailAndPassword,
   signOut,
-  User as FirebaseAuthUser
+  User as FirebaseAuthUser,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
 } from "firebase/auth";
 import {
   getFirestore,
@@ -14,6 +16,8 @@ import {
   serverTimestamp,
   query,
   where,
+  doc,
+  setDoc,
 } from "firebase/firestore";
 import { initializeFirebase } from "@/firebase";
 
@@ -33,7 +37,7 @@ class FirebaseService implements IDataService {
       return userCredential.user;
     } catch (error) {
       console.error("Error logging in:", error);
-      return null;
+      throw error;
     }
   }
 
@@ -41,13 +45,46 @@ class FirebaseService implements IDataService {
     await signOut(this.auth);
   }
 
+  async signUp(email: string, password: string, displayName: string): Promise<FirebaseAuthUser | null> {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
+      const user = userCredential.user;
+      
+      if (user) {
+        const userRef = doc(this.firestore, "users", user.uid);
+        const newUser: Omit<User, 'id'> = {
+          name: displayName,
+          email: user.email!,
+          avatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
+          role: 'Admin', // Default role
+        };
+        await setDoc(userRef, newUser);
+      }
+      
+      return user;
+    } catch (error) {
+      console.error("Error signing up:", error);
+      throw error;
+    }
+  }
+
   async getUser(): Promise<FirebaseAuthUser | null> {
-    return new Promise((resolve) => {
-      const unsubscribe = this.auth.onAuthStateChanged(user => {
-        unsubscribe();
-        resolve(user);
-      });
+    return new Promise((resolve, reject) => {
+      const unsubscribe = onAuthStateChanged(this.auth,
+        (user) => {
+          unsubscribe();
+          resolve(user);
+        },
+        (error) => {
+          unsubscribe();
+          reject(error);
+        }
+      );
     });
+  }
+
+  onAuthStateChange(callback: (user: FirebaseAuthUser | null) => void): () => void {
+    return onAuthStateChanged(this.auth, callback);
   }
 
   async getProjects(): Promise<Project[]> {

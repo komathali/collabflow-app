@@ -25,7 +25,7 @@ export type Task = {
   title: string;
   status: TaskStatus;
   priority: TaskPriority;
-  assignee?: User;
+  assigneeId?: string;
   dueDate?: string;
   tags: string[];
   projectId: string;
@@ -44,7 +44,9 @@ export interface IDataService {
   // Auth
   login(email: string, password: string): Promise<FirebaseAuthUser | null>;
   logout(): Promise<void>;
+  signUp(email: string, password: string, displayName: string): Promise<FirebaseAuthUser | null>
   getUser(): Promise<FirebaseAuthUser | null>;
+  onAuthStateChange(callback: (user: FirebaseAuthUser | null) => void): () => void;
 
   // Data
   getProjects(): Promise<Project[]>;

@@ -3,10 +3,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarDays } from "lucide-react";
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 export default function MyAgenda() {
-    const [date, setDate] = React.useState<Date | undefined>(new Date());
+    const [date, setDate] = useState<Date | undefined>(undefined);
+
+    useEffect(() => {
+        setDate(new Date());
+    }, []);
 
     return (
         <Card>

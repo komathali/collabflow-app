@@ -19,10 +19,15 @@
           "description": "The user's email address.",
           "format": "email"
         },
-        "profilePictureUrl": {
+        "avatarUrl": {
           "type": "string",
           "description": "URL of the user's profile picture.",
           "format": "uri"
+        },
+        "role": {
+          "type": "string",
+          "description": "The user's role.",
+          "enum": ["Admin", "Member", "Guest"]
         }
       },
       "required": [

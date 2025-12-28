@@ -9,7 +9,6 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   LayoutDashboard,
   KanbanSquare,
@@ -19,8 +18,9 @@ import {
   GanttChartSquare,
   LogOut,
 } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useDataService } from '@/hooks/useDataService';
 
 const menuItems = [
   { href: '/dashboard', label: 'My Dashboard', icon: LayoutDashboard },
@@ -31,6 +31,13 @@ const menuItems = [
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const dataService = useDataService();
+
+  const handleLogout = async () => {
+    await dataService.logout();
+    router.push('/login');
+  };
 
   // Redirect / to /dashboard
   const getActivePath = (path: string) => {
@@ -76,7 +83,7 @@ export function SidebarNav() {
                 </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Logout">
+                <SidebarMenuButton tooltip="Logout" onClick={handleLogout}>
                     <LogOut />
                     <span>Logout</span>
                 </SidebarMenuButton>

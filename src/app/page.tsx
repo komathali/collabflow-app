@@ -18,7 +18,7 @@ export default function LandingPage() {
         <h1 className="ml-4 text-xl font-bold text-foreground">CollabFlow</h1>
         <nav className="ml-auto flex gap-4 sm:gap-6">
           <Link
-            href="/dashboard"
+            href="/login"
             className="text-sm font-medium hover:underline underline-offset-4"
             prefetch={false}
           >
