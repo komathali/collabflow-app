@@ -1,3 +1,4 @@
+
 'use client';
 import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage, TimeEntry, ActivityLog } from "@/lib/types";
 import {
@@ -563,4 +564,3 @@ class FirebaseService implements IDataService {
 
 export const firebaseService = new FirebaseService();
 
-    
