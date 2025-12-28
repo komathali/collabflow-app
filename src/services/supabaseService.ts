@@ -1,6 +1,4 @@
-
-
-import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage, TimeEntry } from "@/lib/types";
+import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage, TimeEntry, ActivityLog } from "@/lib/types";
 import { User as FirebaseAuthUser } from "firebase/auth";
 
 class SupabaseService implements IDataService {
@@ -28,7 +26,7 @@ class SupabaseService implements IDataService {
   getProjectById(id: string): Promise<Project | undefined> {
     throw new Error("Method not implemented.");
   }
-  createProject(project: Omit<Project, "id" | "createdAt" | "ownerId" | "memberIds">): Promise<Project> {
+  createProject(project: Omit<Project, "id" | "createdAt" | "ownerId">): Promise<Project> {
     throw new Error("Method not implemented.");
   }
   updateProject(id: string, project: Partial<Project>): Promise<Project | undefined> {
@@ -61,8 +59,6 @@ class SupabaseService implements IDataService {
   addProofingComment(documentId: string, comment: Omit<ProofingComment, "id" | "createdAt" | "userId" | "userName" | "userAvatar">): Promise<void> {
       throw new Error("Method not implemented.");
   }
-
-  // Wiki
   onWikiPages(projectId: string, callback: (pages: WikiPage[]) => void): () => void {
       throw new Error("Method not implemented.");
   }
@@ -75,12 +71,16 @@ class SupabaseService implements IDataService {
   deleteWikiPage(projectId: string, pageId: string): Promise<void> {
       throw new Error("Method not implemented.");
   }
-
-  // Time Tracking
   onTimeEntries(projectId: string, taskId: string, callback: (entries: TimeEntry[]) => void): () => void {
       throw new Error("Method not implemented.");
   }
   addTimeEntry(entry: Omit<TimeEntry, "id">): Promise<void> {
+      throw new Error("Method not implemented.");
+  }
+  logActivity(action: string, resourceType: string, resourceId: string, details: any, projectId: string): Promise<void> {
+      throw new Error("Method not implemented.");
+  }
+  onActivityLogs(projectIds: string[], callback: (logs: ActivityLog[]) => void): () => void {
       throw new Error("Method not implemented.");
   }
 }

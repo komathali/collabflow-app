@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -9,16 +8,24 @@ import { Separator } from "@/components/ui/separator";
 import { useDataService } from "@/hooks/useDataService";
 import { MOCK_TASKS, MOCK_USERS } from "@/lib/data/mock-data";
 import { Project, Task, User, ChatMessage as ChatMessageType, Comment } from "@/lib/types";
-import { Calendar, CheckCircle, Clock, Flag, ListChecks, Users, MessageSquare, Image as ImageIcon, BookText } from "lucide-react";
+import { Calendar, CheckCircle, Clock, Flag, ListChecks, Users, MessageSquare, Image as ImageIcon, BookText, Loader2 } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { DataTable } from '@/components/tasks/data-table';
 import { columns } from '@/components/tasks/columns';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectChat from "@/components/project/project-chat";
 import { useUser } from "@/firebase";
-import ProofingTool from "@/components/proofing/proofing-tool";
-import { ProjectNotes } from "@/components/project/project-notes";
+
+const ProofingTool = React.lazy(() => import('@/components/proofing/proofing-tool'));
+const ProjectNotes = React.lazy(() => import('@/components/project/project-notes'));
+
+const LoadingSpinner = () => (
+    <div className="flex justify-center items-center h-[600px]">
+        <Loader2 className="animate-spin h-8 w-8 text-primary" />
+    </div>
+);
+
 
 export default function ProjectOverviewPage() {
     const { projectId } = useParams();
@@ -126,13 +133,17 @@ export default function ProjectOverviewPage() {
                     <DataTable columns={columns} data={tasks} users={MOCK_USERS} onUpdateTask={onUpdateTask} />
                 </TabsContent>
                 <TabsContent value="notes" className="mt-4">
-                   <ProjectNotes projectId={project.id} />
+                    <Suspense fallback={<LoadingSpinner />}>
+                        <ProjectNotes projectId={project.id} />
+                    </Suspense>
                 </TabsContent>
                 <TabsContent value="chat" className="mt-4">
                     <ProjectChat projectId={project.id} />
                 </TabsContent>
                 <TabsContent value="proofing" className="mt-4">
-                    <ProofingTool projectId={project.id} documentId="mock-doc-1" />
+                     <Suspense fallback={<LoadingSpinner />}>
+                        <ProofingTool projectId={project.id} documentId="mock-doc-1" />
+                    </Suspense>
                 </TabsContent>
             </Tabs>
         </div>

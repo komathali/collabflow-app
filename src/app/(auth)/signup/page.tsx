@@ -10,10 +10,12 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { GanttChartSquare } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SignUpPage() {
   const dataService = useDataService();
   const router = useRouter();
+  const { toast } = useToast();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,6 +26,10 @@ export default function SignUpPage() {
     setError(null);
     try {
       await dataService.signUp(email, password, displayName);
+      toast({
+        title: 'Account Created!',
+        description: 'Welcome to CollabFlow. You are now being redirected.',
+      });
       router.push('/');
     } catch (err: any) {
       setError(err.message || 'Failed to sign up.');

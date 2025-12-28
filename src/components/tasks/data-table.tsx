@@ -92,7 +92,8 @@ export function DataTable<TData, TValue>({
       // Start a new timer
       setActiveTimerId(taskId);
       setStartTime(new Date());
-      toast({ title: "Timer started!", description: `Timer for task ${taskId} has started.` });
+      const task = (data as Task[]).find(t => t.id === taskId);
+      toast({ title: "Timer started!", description: `Timer for task "${task?.title}" has started.` });
     }
   };
 
@@ -113,6 +114,10 @@ export function DataTable<TData, TValue>({
       updateData: (rowIndex: number, columnId: string, value: any) => {
         const task = data[rowIndex] as unknown as Task;
         onUpdateTask(task.id, { [columnId]: value, projectId: task.projectId });
+         toast({
+            title: 'Task Updated',
+            description: `Task "${task.title}" has been updated.`,
+        });
       },
     },
     enableRowSelection: true,

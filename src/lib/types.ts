@@ -1,5 +1,3 @@
-
-
 import { User as FirebaseAuthUser } from 'firebase/auth';
 
 export type User = {
@@ -120,7 +118,7 @@ export interface IDataService {
   // Data
   getProjects(): Promise<Project[]>;
   getProjectById(id: string): Promise<Project | undefined>;
-  createProject(project: Omit<Project, 'id' | 'createdAt' | 'ownerId' | 'memberIds'>): Promise<Project>;
+  createProject(project: Omit<Project, 'id' | 'createdAt' | 'ownerId'>): Promise<Project>;
   updateProject(id: string, project: Partial<Project>): Promise<Project | undefined>;
   deleteProject(id: string): Promise<void>;
 
@@ -152,5 +150,3 @@ export interface IDataService {
   logActivity(action: string, resourceType: string, resourceId: string, details: any, projectId: string): Promise<void>;
   onActivityLogs(projectIds: string[], callback: (logs: ActivityLog[]) => void): () => void;
 }
-
-    

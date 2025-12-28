@@ -1,4 +1,3 @@
-
 'use client';
 import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage, TimeEntry, ActivityLog } from "@/lib/types";
 import {
@@ -8,6 +7,7 @@ import {
   User as FirebaseAuthUser,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  updateProfile,
 } from "firebase/auth";
 import {
   getFirestore,
@@ -60,13 +60,14 @@ class FirebaseService implements IDataService {
       const user = userCredential.user;
       
       if (user) {
-        // Note: Using the user's UID as the document ID in the 'users' collection.
+        await updateProfile(user, { displayName });
         const userRef = doc(this.firestore, "users", user.uid);
         await setDoc(userRef, {
+          id: user.uid,
           name: displayName,
           email: user.email!,
           avatarUrl: `https://i.pravatar.cc/150?u=${user.uid}`,
-          role: 'Admin', // Default role for new sign-ups.
+          role: 'Admin',
         });
       }
       
@@ -159,7 +160,7 @@ class FirebaseService implements IDataService {
     return undefined;
   }
 
-  async createProject(project: Omit<Project, 'id' | 'createdAt' | 'ownerId' | 'memberIds'> & { memberIds?: string[] }): Promise<Project> {
+  async createProject(project: Omit<Project, 'id' | 'createdAt' | 'ownerId'> & { memberIds?: string[] }): Promise<Project> {
     const user = this.auth.currentUser;
     if (!user) {
       throw new Error("User must be logged in to create a project.");

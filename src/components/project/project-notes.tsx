@@ -3,9 +3,8 @@
 import { useDataService } from '@/hooks/useDataService';
 import { WikiPage } from '@/lib/types';
 import { Book, FilePlus, Loader2, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { Button } from '../ui/button';
-import { RichTextEditor } from './rich-text-editor';
 import { Input } from '../ui/input';
 import {
   AlertDialog,
@@ -19,6 +18,14 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+
+const RichTextEditor = React.lazy(() => import('./rich-text-editor').then(module => ({ default: module.RichTextEditor })));
+
+const LoadingSpinner = () => (
+    <div className="flex justify-center items-center h-full">
+        <Loader2 className="animate-spin h-8 w-8 text-primary" />
+    </div>
+);
 
 export function ProjectNotes({ projectId }: { projectId: string }) {
   const [pages, setPages] = useState<WikiPage[]>([]);
@@ -46,7 +53,7 @@ export function ProjectNotes({ projectId }: { projectId: string }) {
     });
 
     return () => unsubscribe();
-  }, [projectId, dataService]);
+  }, [projectId, dataService, selectedPage]);
 
   const handleCreatePage = async () => {
     if (!newPageTitle.trim()) return;
@@ -55,7 +62,7 @@ export function ProjectNotes({ projectId }: { projectId: string }) {
       const newPage = await dataService.createWikiPage(projectId, newPageTitle);
       setSelectedPage(newPage);
       setNewPageTitle('');
-    } catch (error) {
+    } catch (error) => {
       console.error('Failed to create page:', error);
       toast({
         title: 'Error creating page',
@@ -70,7 +77,7 @@ export function ProjectNotes({ projectId }: { projectId: string }) {
     try {
       await dataService.deleteWikiPage(projectId, pageId);
       toast({ title: 'Page deleted' });
-    } catch (error) {
+    } catch (error) => {
       console.error('Failed to delete page:', error);
       toast({
         title: 'Error deleting page',
@@ -136,7 +143,9 @@ export function ProjectNotes({ projectId }: { projectId: string }) {
       </aside>
       <main className="flex-1 flex flex-col">
         {selectedPage ? (
-          <RichTextEditor page={selectedPage} key={selectedPage.id} />
+           <Suspense fallback={<LoadingSpinner />}>
+                <RichTextEditor page={selectedPage} key={selectedPage.id} />
+           </Suspense>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center">
             <Book className="w-16 h-16 text-muted-foreground" />

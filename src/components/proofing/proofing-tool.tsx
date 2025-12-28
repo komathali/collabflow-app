@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useRef, MouseEvent, ChangeEvent, FormEvent } from 'react';
+import { useState, useRef, MouseEvent, ChangeEvent, FormEvent, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -15,6 +14,7 @@ import { useUser } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProofingToolProps {
   projectId: string;
@@ -24,22 +24,19 @@ interface ProofingToolProps {
 export default function ProofingTool({ projectId, documentId }: ProofingToolProps) {
   const [imageSrc, setImageSrc] = useState<string | null>("https://picsum.photos/seed/proofing/1200/800");
   const [comments, setComments] = useState<ProofingComment[]>([]);
-  const [activePopover, setActivePopover] = useState<number | 'new' | null>(null);
+  const [activePopover, setActivePopover] = useState<string | 'new' | null>(null);
   const [newCommentCoords, setNewCommentCoords] = useState<{ x: number, y: number } | null>(null);
   const [newCommentText, setNewCommentText] = useState('');
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const dataService = useDataService();
   const { user } = useUser();
+  const { toast } = useToast();
 
-  // In a real app, you would fetch comments from your data service
-  // For this example, we'll manage them in state and mock service calls.
-  
-  // Placeholder: In a real app, use onProofingComments
-  // useEffect(() => {
-  //   const unsubscribe = dataService.onProofingComments(documentId, setComments);
-  //   return () => unsubscribe();
-  // }, [documentId, dataService]);
+  useEffect(() => {
+    const unsubscribe = dataService.onProofingComments(documentId, setComments);
+    return () => unsubscribe();
+  }, [documentId, dataService]);
 
   const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -56,7 +53,6 @@ export default function ProofingTool({ projectId, documentId }: ProofingToolProp
   const handleCanvasClick = (event: MouseEvent<HTMLDivElement>) => {
     if (!imageContainerRef.current) return;
 
-    // Don't add a new pin if clicking on an existing one
     if ((event.target as HTMLElement).closest('[data-comment-pin]')) {
         return;
     }
@@ -70,27 +66,23 @@ export default function ProofingTool({ projectId, documentId }: ProofingToolProp
     setNewCommentText('');
   };
 
-  const handleCommentSubmit = (e: FormEvent) => {
+  const handleCommentSubmit = async (e: FormEvent) => {
       e.preventDefault();
       if (!newCommentText.trim() || !newCommentCoords || !user) return;
       
-      const newComment: ProofingComment = {
-        id: `comment-${Date.now()}`,
-        userId: user.uid,
-        userName: user.displayName || 'Anonymous',
-        userAvatar: user.photoURL || undefined,
+      const newComment: Omit<ProofingComment, 'id' | 'createdAt' | 'userId' | 'userName' | 'userAvatar'> = {
         documentId,
         x: newCommentCoords.x,
         y: newCommentCoords.y,
         content: newCommentText,
-        createdAt: new Date().toISOString(),
       };
 
-      setComments(prev => [...prev, newComment]);
-
-      // Placeholder for dataService.addProofingComment(...)
-      console.log("Adding proofing comment:", newComment);
-      // dataService.addProofingComment(documentId, { x: newComment.x, y: newComment.y, content: newComment.content, documentId });
+      try {
+        await dataService.addProofingComment(documentId, newComment);
+        toast({ title: 'Comment Added' });
+      } catch (error) {
+        toast({ title: 'Error adding comment', variant: 'destructive' });
+      }
 
       setActivePopover(null);
       setNewCommentCoords(null);
@@ -124,9 +116,8 @@ export default function ProofingTool({ projectId, documentId }: ProofingToolProp
                 >
                     <Image src={imageSrc} alt="Proofing document" layout="fill" objectFit="contain" />
                     
-                    {/* Existing Comments */}
                     {comments.map((comment, index) => (
-                        <Popover key={comment.id} open={activePopover === index} onOpenChange={(isOpen) => setActivePopover(isOpen ? index : null)}>
+                        <Popover key={comment.id} open={activePopover === comment.id} onOpenChange={(isOpen) => setActivePopover(isOpen ? comment.id : null)}>
                             <PopoverTrigger asChild>
                                 <button
                                     data-comment-pin
@@ -151,7 +142,6 @@ export default function ProofingTool({ projectId, documentId }: ProofingToolProp
                         </Popover>
                     ))}
                     
-                    {/* New Comment Popover */}
                     {newCommentCoords && (
                         <Popover open={activePopover === 'new'} onOpenChange={(isOpen) => !isOpen && setActivePopover(null)}>
                             <PopoverTrigger asChild>
@@ -190,9 +180,9 @@ export default function ProofingTool({ projectId, documentId }: ProofingToolProp
                         <div key={comment.id} 
                             className={cn(
                                 "flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors hover:bg-muted",
-                                activePopover === index && "bg-muted"
+                                activePopover === comment.id && "bg-muted"
                             )}
-                            onClick={() => setActivePopover(activePopover === index ? null : index)}
+                            onClick={() => setActivePopover(activePopover === comment.id ? null : comment.id)}
                         >
                             <div className="w-8 h-8 bg-primary rounded-full text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">
                                 {index + 1}

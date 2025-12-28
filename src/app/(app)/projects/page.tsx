@@ -1,10 +1,9 @@
-
 'use client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { useDataService } from "@/hooks/useDataService";
-import { Project } from "@/lib/types";
+import { Project, Task } from "@/lib/types";
 import { FolderKanban, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -12,6 +11,7 @@ import { CreateProjectModal } from "@/components/project/create-project-modal";
 
 export default function ProjectsPage() {
     const [projects, setProjects] = useState<Project[]>([]);
+    const [tasks, setTasks] = useState<Record<string, Task[]>>({});
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const dataService = useDataService();
@@ -21,6 +21,16 @@ export default function ProjectsPage() {
         try {
             const userProjects = await dataService.getProjects();
             setProjects(userProjects);
+            
+            const taskPromises = userProjects.map(p => dataService.getTasksByProjectId(p.id));
+            const allTasks = await Promise.all(taskPromises);
+
+            const tasksByProject: Record<string, Task[]> = {};
+            userProjects.forEach((project, index) => {
+                tasksByProject[project.id] = allTasks[index];
+            });
+            setTasks(tasksByProject);
+
         } catch (error) {
             console.error("Failed to fetch projects", error);
         } finally {
@@ -35,6 +45,13 @@ export default function ProjectsPage() {
     const onProjectCreated = (newProject: Project) => {
         setProjects(prev => [...prev, newProject]);
         fetchProjects();
+    }
+
+    const calculateProgress = (projectId: string) => {
+        const projectTasks = tasks[projectId] || [];
+        if (projectTasks.length === 0) return 0;
+        const completedTasks = projectTasks.filter(t => t.status === 'Done').length;
+        return Math.round((completedTasks / projectTasks.length) * 100);
     }
 
     if (loading) {
@@ -73,14 +90,14 @@ export default function ProjectsPage() {
                                 <div className="space-y-2">
                                     <div className="flex justify-between items-center text-sm text-muted-foreground">
                                         <span>Progress</span>
-                                        <span>{Math.floor(Math.random() * 100)}%</span>
+                                        <span>{calculateProgress(project.id)}%</span>
                                     </div>
-                                    <Progress value={Math.floor(Math.random() * 100)} />
+                                    <Progress value={calculateProgress(project.id)} />
                                 </div>
                             </CardContent>
                             <CardFooter>
                                 <p className="text-sm text-muted-foreground">
-                                    {new Date(project.createdAt).toLocaleDateString()}
+                                    Created: {new Date(project.createdAt).toLocaleDateString()}
                                 </p>
                             </CardFooter>
                         </Card>
