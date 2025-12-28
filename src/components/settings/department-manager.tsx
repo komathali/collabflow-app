@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useDataService } from '@/hooks/useDataService';
@@ -42,6 +41,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { useUser } from '@/firebase';
 
 export function DepartmentManager() {
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -58,20 +58,30 @@ export function DepartmentManager() {
   });
 
   const dataService = useDataService();
+  const { user: currentUser } = useUser();
   const { toast } = useToast();
 
-  useEffect(() => {
-    setIsLoading(true);
-    Promise.all([
-      dataService.getDepartments(),
-      dataService.getEmployees(),
-      dataService.getUsers(),
-    ]).then(([depts, emps, usrs]) => {
+  const fetchData = async () => {
+    try {
+      const [depts, emps, usrs] = await Promise.all([
+        dataService.getDepartments(),
+        dataService.getEmployees(),
+        dataService.getUsers(),
+      ]);
       setDepartments(depts);
       setEmployees(emps);
       setUsers(usrs);
+    } catch (error) {
+      console.error("Failed to fetch admin data:", error);
+      toast({ title: 'Error fetching data', variant: 'destructive' });
+    } finally {
       setIsLoading(false);
-    });
+    }
+  }
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetchData();
   }, [dataService]);
 
   const handleCreateDepartment = async () => {
@@ -81,22 +91,20 @@ export function DepartmentManager() {
       toast({ title: 'Department created' });
       setNewDeptName('');
       setIsDeptModalOpen(false);
-      // Refetch
-      dataService.getDepartments().then(setDepartments);
+      fetchData(); // Refetch all data
     } catch (error) {
       toast({ title: 'Error creating department', variant: 'destructive' });
     }
   };
 
   const handleAddEmployee = async () => {
-    if (!newEmployee.userId || !newEmployee.departmentId) return;
+    if (!newEmployee.userId || !newEmployee.departmentId || !newEmployee.title) return;
     try {
       await dataService.createEmployee(newEmployee);
       toast({ title: 'Employee added' });
       setIsEmployeeModalOpen(false);
       setNewEmployee({ userId: '', departmentId: '', title: '' });
-      // Refetch
-      dataService.getEmployees().then(setEmployees);
+      fetchData(); // Refetch all data
     } catch (error) {
       toast({ title: 'Error adding employee', variant: 'destructive' });
     }
@@ -106,10 +114,20 @@ export function DepartmentManager() {
     try {
         await dataService.deleteDepartment(deptId);
         toast({ title: 'Department deleted'});
-        dataService.getDepartments().then(setDepartments);
+        fetchData(); // Refetch all data
     } catch(e) {
         toast({ title: 'Error deleting department', description: 'Make sure no employees are assigned to it first.', variant: 'destructive' });
     }
+  };
+  
+  const handleDeleteEmployee = async (employeeId: string) => {
+      try {
+        await dataService.deleteEmployee(employeeId);
+        toast({ title: 'Employee removed' });
+        fetchData(); // Refetch
+      } catch (error) {
+        toast({ title: 'Error removing employee', variant: 'destructive' });
+      }
   };
   
   const getUserName = (userId: string) => users.find(u => u.id === userId)?.name || 'Unknown User';
@@ -145,7 +163,7 @@ export function DepartmentManager() {
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            {departments.map(dept => (
+            {departments.length > 0 ? departments.map(dept => (
               <div key={dept.id}>
                 <div className="flex items-center justify-between mb-2">
                     <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -174,7 +192,7 @@ export function DepartmentManager() {
                     .map(emp => (
                       <li key={emp.id} className="flex justify-between items-center">
                         <span>{getUserName(emp.userId)} - <i className="text-xs">{emp.title}</i></span>
-                         <Button variant="ghost" size="icon" onClick={() => dataService.deleteEmployee(emp.id).then(() => dataService.getEmployees().then(setEmployees))}><Trash2 className="h-4 w-4 text-destructive/50 hover:text-destructive" /></Button>
+                         <Button variant="ghost" size="icon" onClick={() => handleDeleteEmployee(emp.id)}><Trash2 className="h-4 w-4 text-destructive/50 hover:text-destructive" /></Button>
                       </li>
                     ))}
                     {employees.filter(emp => emp.departmentId === dept.id).length === 0 && (
@@ -182,10 +200,12 @@ export function DepartmentManager() {
                     )}
                 </ul>
               </div>
-            ))}
+            )) : (
+              <p className="text-sm text-muted-foreground text-center py-4">No departments created yet.</p>
+            )}
           </div>
         </CardContent>
-      </Card>
+      </Card>>
 
       {/* Create Department Modal */}
       <Dialog open={isDeptModalOpen} onOpenChange={setIsDeptModalOpen}>
