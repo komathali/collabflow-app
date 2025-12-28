@@ -298,6 +298,11 @@ class FirebaseService implements IDataService {
     return undefined;
   }
 
+  async deleteTask(projectId: string, taskId: string): Promise<void> {
+    const taskRef = doc(this.firestore, `projects/${projectId}/tasks`, taskId);
+    await deleteDoc(taskRef);
+  }
+
   onChatMessages(projectId: string, callback: (messages: ChatMessage[]) => void): () => void {
     const messagesCol = collection(this.firestore, `projects/${projectId}/chat_messages`);
     const q = query(messagesCol, orderBy("timestamp", "asc"));

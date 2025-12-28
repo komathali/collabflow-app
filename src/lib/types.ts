@@ -125,6 +125,7 @@ export interface IDataService {
   // Tasks
   getTasksByProjectId(projectId: string): Promise<Task[]>;
   updateTask(taskId: string, taskData: Partial<Task>): Promise<Task | undefined>;
+  deleteTask(projectId: string, taskId: string): Promise<void>;
 
   // Chat & Comments
   onChatMessages(projectId: string, callback: (messages: ChatMessage[]) => void): () => void;

@@ -97,6 +97,16 @@ export function DataTable<TData, TValue>({
     }
   };
 
+  const deleteTask = async (projectId: string, taskId: string) => {
+    try {
+      await dataService.deleteTask(projectId, taskId);
+      toast({ title: "Task Deleted" });
+      // The on-screen data will be updated by the realtime listener in the parent component
+    } catch (error) {
+      toast({ title: "Error deleting task", variant: 'destructive' });
+    }
+  }
+
   const table = useReactTable({
     data,
     columns,
@@ -111,6 +121,8 @@ export function DataTable<TData, TValue>({
       users,
       activeTimerId,
       handleTimerToggle,
+      deleteTask,
+      onUpdateTask,
       updateData: (rowIndex: number, columnId: string, value: any) => {
         const task = data[rowIndex] as unknown as Task;
         onUpdateTask(task.id, { [columnId]: value, projectId: task.projectId });
