@@ -32,6 +32,7 @@ const menuItems = [
   { href: '/tasks', label: 'Tasks', icon: ListTodo },
   { href: '/board', label: 'Board', icon: KanbanSquare },
   { href: '/calendar', label: 'Calendar', icon: CalendarDays },
+  { href: '/reporting', label: 'Reporting', icon: BarChartHorizontal },
   { href: '/summary', label: 'AI Summary', icon: BrainCircuit },
 ];
 

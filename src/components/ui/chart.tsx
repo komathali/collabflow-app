@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -131,7 +132,7 @@ const ChartTooltipContent = React.forwardRef<
     },
     ref
   ) => {
-    const { config } = useChart()
+    const { config } = useChart() || {config: {}};
 
     const tooltipLabel = React.useMemo(() => {
       if (hideLabel || !payload?.length) {
