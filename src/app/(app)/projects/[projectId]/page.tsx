@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { useDataService } from "@/hooks/useDataService";
 import { Project, Task, User } from "@/lib/types";
-import { Calendar, CheckCircle, Clock, Flag, ListChecks, Users, MessageSquare, Image as ImageIcon, BookText, Loader2 } from "lucide-react";
+import { Calendar, CheckCircle, Clock, Flag, ListChecks, Users, MessageSquare, Image as ImageIcon, BookText, Loader2, Workflow } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState, Suspense } from "react";
 import { DataTable } from '@/components/tasks/data-table';
@@ -86,6 +86,15 @@ export default function ProjectOverviewPage() {
                     <p className="text-muted-foreground">{project.description}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                    {project.framework && (
+                        <>
+                            <div className="flex items-center gap-2">
+                                <Workflow className="w-4 h-4" />
+                                <span>{project.framework}</span>
+                            </div>
+                            <Separator orientation="vertical" className="h-4" />
+                        </>
+                    )}
                     <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
                         <span>{new Date(project.startDate!).toLocaleDateString()} - {new Date(project.endDate!).toLocaleDateString()}</span>

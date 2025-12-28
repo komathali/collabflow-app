@@ -20,6 +20,11 @@ export type Employee = {
     title: string;
 };
 
+export type ProjectFramework = 'Agile' | 'Waterfall' | 'Kanban' | 'Scrum' | 'Hybrid';
+
+export const projectFrameworks: ProjectFramework[] = ['Agile', 'Waterfall', 'Kanban', 'Scrum', 'Hybrid'];
+
+
 export type Project = {
   id: string;
   name: string;
@@ -29,6 +34,7 @@ export type Project = {
   createdAt: string;
   startDate?: string;
   endDate?: string;
+  framework?: ProjectFramework;
 };
 
 export type TaskStatus = 'To-Do' | 'In Progress' | 'In Review' | 'Done';

@@ -93,6 +93,11 @@
         "settings": {
           "type": "string",
           "description": "Project settings (e.g., color theme, notification preferences) stored as a JSON string."
+        },
+        "framework": {
+          "type": "string",
+          "description": "The project management framework used (e.g., Agile, Waterfall).",
+          "enum": ["Agile", "Waterfall", "Kanban", "Scrum", "Hybrid"]
         }
       },
       "required": [

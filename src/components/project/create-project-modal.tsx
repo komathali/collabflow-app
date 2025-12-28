@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useDataService } from "@/hooks/useDataService";
-import { Project, User } from "@/lib/types";
+import { Project, User, ProjectFramework, projectFrameworks } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../ui/command";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 const projectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -26,6 +27,7 @@ const projectSchema = z.object({
   startDate: z.date().optional(),
   endDate: z.date().optional(),
   memberIds: z.array(z.string()).optional(),
+  framework: z.string().optional(),
 });
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
@@ -66,6 +68,7 @@ export function CreateProjectModal({ isOpen, setIsOpen, onProjectCreated }: Crea
     try {
       const newProjectData = {
           ...values,
+          framework: values.framework as ProjectFramework,
           startDate: values.startDate?.toISOString(),
           endDate: values.endDate?.toISOString()
       };
@@ -124,6 +127,30 @@ export function CreateProjectModal({ isOpen, setIsOpen, onProjectCreated }: Crea
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="framework"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Project Framework</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a framework" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {projectFrameworks.map(fw => (
+                        <SelectItem key={fw} value={fw}>{fw}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
 
             <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -219,7 +246,7 @@ export function CreateProjectModal({ isOpen, setIsOpen, onProjectCreated }: Crea
                                 </Button>
                             </FormControl>
                         </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 z-[60]">
                            <Command>
                                 <CommandInput placeholder="Search users..."/>
                                 <CommandList>

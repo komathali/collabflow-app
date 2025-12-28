@@ -1,5 +1,5 @@
 'use client';
-import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage, TimeEntry, ActivityLog, Department, Employee, StickyNote } from "@/lib/types";
+import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage, TimeEntry, ActivityLog, Department, Employee, StickyNote, ProjectFramework } from "@/lib/types";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -226,6 +226,7 @@ class FirebaseService implements IDataService {
         createdAt: data.createdAt?.toDate().toISOString() || new Date().toISOString(),
         startDate: data.startDate,
         endDate: data.endDate,
+        framework: data.framework,
       });
     });
     return projects;
@@ -245,6 +246,7 @@ class FirebaseService implements IDataService {
         createdAt: data.createdAt?.toDate().toISOString() || new Date().toISOString(),
         startDate: data.startDate,
         endDate: data.endDate,
+        framework: data.framework,
       };
     }
     return undefined;
@@ -282,6 +284,7 @@ class FirebaseService implements IDataService {
         createdAt: (newProjectData.createdAt as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
         startDate: newProjectData.startDate,
         endDate: newProjectData.endDate,
+        framework: newProjectData.framework,
     };
 
     const details = { projectName: newProject.name };

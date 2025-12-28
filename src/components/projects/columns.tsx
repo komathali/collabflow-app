@@ -15,6 +15,7 @@ import React from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
 import Link from 'next/link';
+import { Badge } from '../ui/badge';
 
 const EditableCell = ({ getValue, row, column, table }: any) => {
   const initialValue = getValue();
@@ -111,6 +112,15 @@ export const columns: ColumnDef<Project>[] = [
       <DataTableColumnHeader column={column} title="Description" />
     ),
     cell: EditableCell,
+  },
+  {
+    accessorKey: 'framework',
+    header: 'Framework',
+    cell: ({ row }) => {
+      const framework = row.getValue('framework') as string;
+      if (!framework) return null;
+      return <Badge variant="outline">{framework}</Badge>
+    }
   },
   {
     accessorKey: 'memberIds',
