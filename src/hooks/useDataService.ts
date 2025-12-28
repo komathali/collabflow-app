@@ -1,23 +1,17 @@
 'use client';
 
 import { IDataService } from "@/lib/types";
-import { useState, useEffect } from "react";
+import { DataContext } from "@/context/data-service-provider";
+import { useContext } from "react";
 
-export function useDataService(): IDataService | null {
-  const [service, setService] = useState<IDataService | null>(null);
-
-  useEffect(() => {
-    // This effect runs only on the client side.
-    const loadService = async () => {
-      // Dynamically import the service to ensure it's not part of the server bundle.
-      const { firebaseService } = await import("@/services/firebaseService");
-      setService(firebaseService);
-    };
-
-    loadService();
-  }, []); // The empty dependency array ensures this runs only once on mount.
-
-  return service;
+export function useDataService(): IDataService {
+  const context = useContext(DataContext);
+  if (context === undefined) {
+    throw new Error("useDataService must be used within a DataServiceProvider");
+  }
+  if (!context.service) {
+    // This should ideally not happen if the provider is correctly showing a loading state.
+    throw new Error("Data service is not yet available.");
+  }
+  return context.service;
 }
-
-    

@@ -17,7 +17,6 @@ export default function ProjectsPage() {
     const dataService = useDataService();
 
     const fetchProjects = async () => {
-        if (!dataService) return;
         setLoading(true);
         try {
             const userProjects = await dataService.getProjects();
@@ -55,7 +54,7 @@ export default function ProjectsPage() {
         return Math.round((completedTasks / projectTasks.length) * 100);
     }
 
-    if (loading || !dataService) {
+    if (loading) {
         return <div>Loading...</div>
     }
 
@@ -121,5 +120,3 @@ export default function ProjectsPage() {
         </div>
     );
 }
-
-    

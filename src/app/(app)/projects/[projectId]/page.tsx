@@ -35,7 +35,7 @@ export default function ProjectOverviewPage() {
     const dataService = useDataService();
 
     useEffect(() => {
-        if (typeof projectId === 'string' && dataService) {
+        if (typeof projectId === 'string') {
             const fetchProjectData = async () => {
                 try {
                     const fetchedProject = await dataService.getProjectById(projectId);
@@ -54,7 +54,7 @@ export default function ProjectOverviewPage() {
         }
     }, [projectId, dataService]);
 
-    if (loading || !dataService) {
+    if (loading) {
         return <div>Loading project...</div>;
     }
 
@@ -149,5 +149,3 @@ export default function ProjectOverviewPage() {
         </div>
     );
 }
-
-    

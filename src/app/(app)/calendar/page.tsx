@@ -25,7 +25,6 @@ export default function CalendarPage() {
   const [viewTitle, setViewTitle] = useState('');
 
   useEffect(() => {
-    if (!dataService) return;
     const getTasks = async () => {
       // In a real app, you'd fetch tasks from multiple projects
       setTasks(MOCK_TASKS);
@@ -87,7 +86,7 @@ export default function CalendarPage() {
   
   const calendarApi = () => calendarRef.current?.getApi();
 
-  if (loading || !dataService) {
+  if (loading) {
     return <div>Loading Calendar...</div>;
   }
 
@@ -142,5 +141,3 @@ export default function CalendarPage() {
     </div>
   );
 }
-
-    
