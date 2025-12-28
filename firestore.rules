@@ -114,6 +114,13 @@ service cloud.firestore {
       allow update: if resource != null && isProjectMemberByGet(projectId) && request.resource.data.projectId == projectId;
       allow delete: if resource != null && isProjectMemberByGet(projectId);
     }
+    
+    match /projects/{projectId}/tasks/{taskId}/comments/{commentId} {
+      allow get, list: if isProjectMemberByGet(projectId);
+      allow create: if isProjectMemberByGet(projectId) && request.resource.data.userId == request.auth.uid;
+      allow update: if resource != null && isProjectMemberByGet(projectId) && isOwner(resource.data.userId);
+      allow delete: if resource != null && isProjectMemberByGet(projectId) && isOwner(resource.data.userId);
+    }
 
     match /projects/{projectId}/tags/{tagId} {
       allow get, list: if isProjectMemberByGet(projectId);
@@ -178,3 +185,5 @@ service cloud.firestore {
 
   }
 }
+
+    

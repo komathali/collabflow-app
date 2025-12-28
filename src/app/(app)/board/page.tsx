@@ -13,6 +13,7 @@ export default function BoardPage() {
   const dataService = useDataService();
 
   useEffect(() => {
+    if (!dataService) return;
     const getTasks = async () => {
       // This is where you might call `dataService.getTasks()`
       setTasks(MOCK_TASKS);
@@ -33,7 +34,7 @@ export default function BoardPage() {
     );
   };
 
-  if (loading) {
+  if (loading || !dataService) {
     return <div>Loading board...</div>;
   }
   return (
@@ -48,3 +49,5 @@ export default function BoardPage() {
     </div>
   );
 }
+
+    

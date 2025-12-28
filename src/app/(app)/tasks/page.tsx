@@ -13,6 +13,7 @@ export default function TasksPage() {
   const dataService = useDataService();
 
   useEffect(() => {
+    if (!dataService) return;
     // In a real app, you would fetch tasks from your data service
     // For now, we use mock data.
     const getTasks = async () => {
@@ -34,7 +35,7 @@ export default function TasksPage() {
     );
   };
 
-  if (loading) {
+  if (loading || !dataService) {
     return <div>Loading tasks...</div>;
   }
 
@@ -50,3 +51,5 @@ export default function TasksPage() {
     </div>
   );
 }
+
+    

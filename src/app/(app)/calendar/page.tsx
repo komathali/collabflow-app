@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -26,6 +25,7 @@ export default function CalendarPage() {
   const [viewTitle, setViewTitle] = useState('');
 
   useEffect(() => {
+    if (!dataService) return;
     const getTasks = async () => {
       // In a real app, you'd fetch tasks from multiple projects
       setTasks(MOCK_TASKS);
@@ -87,7 +87,7 @@ export default function CalendarPage() {
   
   const calendarApi = () => calendarRef.current?.getApi();
 
-  if (loading) {
+  if (loading || !dataService) {
     return <div>Loading Calendar...</div>;
   }
 
@@ -142,3 +142,5 @@ export default function CalendarPage() {
     </div>
   );
 }
+
+    

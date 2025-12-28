@@ -1,4 +1,3 @@
-
 'use client';
 
 import ActivityFeed from '@/components/dashboard/activity-feed';
@@ -18,3 +17,5 @@ export default function ActivitiesPage() {
     </div>
   );
 }
+
+    

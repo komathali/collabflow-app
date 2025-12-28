@@ -1,4 +1,3 @@
-
 'use client';
 import { BarChartHorizontal, Calendar, Users } from "lucide-react";
 import { WorkloadChart } from "@/components/reporting/workload-chart";
@@ -37,3 +36,5 @@ export default function ReportingPage() {
         </div>
     )
 }
+
+    
