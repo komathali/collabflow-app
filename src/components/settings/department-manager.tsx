@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useDataService } from '@/hooks/useDataService';
@@ -205,7 +206,7 @@ export function DepartmentManager() {
             )}
           </div>
         </CardContent>
-      </Card>>
+      </Card>
 
       {/* Create Department Modal */}
       <Dialog open={isDeptModalOpen} onOpenChange={setIsDeptModalOpen}>
