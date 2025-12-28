@@ -1,6 +1,6 @@
 
 
-import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment } from "@/lib/types";
+import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage } from "@/lib/types";
 import { User as FirebaseAuthUser } from "firebase/auth";
 
 class SupabaseService implements IDataService {
@@ -59,6 +59,20 @@ class SupabaseService implements IDataService {
       throw new Error("Method not implemented.");
   }
   addProofingComment(documentId: string, comment: Omit<ProofingComment, "id" | "createdAt" | "userId" | "userName" | "userAvatar">): Promise<void> {
+      throw new Error("Method not implemented.");
+  }
+
+  // Wiki
+  onWikiPages(projectId: string, callback: (pages: WikiPage[]) => void): () => void {
+      throw new Error("Method not implemented.");
+  }
+  createWikiPage(projectId: string, title: string): Promise<WikiPage> {
+      throw new Error("Method not implemented.");
+  }
+  updateWikiPage(projectId: string, pageId: string, data: Partial<WikiPage>): Promise<void> {
+      throw new Error("Method not implemented.");
+  }
+  deleteWikiPage(projectId: string, pageId: string): Promise<void> {
       throw new Error("Method not implemented.");
   }
 }

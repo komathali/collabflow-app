@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { useDataService } from "@/hooks/useDataService";
 import { MOCK_TASKS, MOCK_USERS } from "@/lib/data/mock-data";
 import { Project, Task, User, ChatMessage as ChatMessageType, Comment } from "@/lib/types";
-import { Calendar, CheckCircle, Clock, Flag, ListChecks, Users, MessageSquare, Image as ImageIcon } from "lucide-react";
+import { Calendar, CheckCircle, Clock, Flag, ListChecks, Users, MessageSquare, Image as ImageIcon, BookText } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DataTable } from '@/components/tasks/data-table';
@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProjectChat from "@/components/project/project-chat";
 import { useUser } from "@/firebase";
 import ProofingTool from "@/components/proofing/proofing-tool";
+import { ProjectNotes } from "@/components/project/project-notes";
 
 export default function ProjectOverviewPage() {
     const { projectId } = useParams();
@@ -108,6 +109,10 @@ export default function ProjectOverviewPage() {
                         <ListChecks className="mr-2 h-4 w-4"/>
                         Tasks
                     </TabsTrigger>
+                     <TabsTrigger value="notes">
+                        <BookText className="mr-2 h-4 w-4"/>
+                        Notes
+                    </TabsTrigger>
                     <TabsTrigger value="chat">
                         <MessageSquare className="mr-2 h-4 w-4"/>
                         Chat
@@ -119,6 +124,9 @@ export default function ProjectOverviewPage() {
                 </TabsList>
                 <TabsContent value="tasks" className="mt-4">
                     <DataTable columns={columns} data={tasks} users={MOCK_USERS} onUpdateTask={onUpdateTask} />
+                </TabsContent>
+                <TabsContent value="notes" className="mt-4">
+                   <ProjectNotes projectId={project.id} />
                 </TabsContent>
                 <TabsContent value="chat" className="mt-4">
                     <ProjectChat projectId={project.id} />

@@ -156,6 +156,12 @@ service cloud.firestore {
       allow delete: if resource != null && isProjectMemberByGet(projectId) && isOwner(resource.data.userId);
     }
 
+    match /projects/{projectId}/wiki_pages/{wikiPageId} {
+      allow get, list: if isProjectMemberByGet(projectId);
+      allow create: if isProjectMemberByGet(projectId) && request.resource.data.projectId == projectId;
+      allow update, delete: if resource != null && isProjectMemberByGet(projectId);
+    }
+
     // ------------------------------------------------------------------
     // Collection Groups
     // ------------------------------------------------------------------

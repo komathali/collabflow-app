@@ -1,6 +1,6 @@
 
 'use client';
-import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment } from "@/lib/types";
+import { IDataService, Project, Task, User, ChatMessage, Comment, ProofingComment, WikiPage } from "@/lib/types";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -357,6 +357,73 @@ class FirebaseService implements IDataService {
           userAvatar: user.photoURL,
           createdAt: serverTimestamp(),
       });
+  }
+
+  // Wiki/Notes
+  onWikiPages(projectId: string, callback: (pages: WikiPage[]) => void): () => void {
+    const pagesCol = collection(this.firestore, `projects/${projectId}/wiki_pages`);
+    const q = query(pagesCol, orderBy("createdAt", "asc"));
+    
+    return onSnapshot(q, (querySnapshot) => {
+        const pages: WikiPage[] = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            pages.push({
+                id: doc.id,
+                projectId: data.projectId,
+                title: data.title,
+                content: data.content,
+                createdAt: data.createdAt?.toDate().toISOString(),
+                updatedAt: data.updatedAt?.toDate().toISOString(),
+            });
+        });
+        callback(pages);
+    });
+  }
+
+  async createWikiPage(projectId: string, title: string): Promise<WikiPage> {
+    const user = this.auth.currentUser;
+    if (!user) {
+      throw new Error("User must be logged in to create a wiki page.");
+    }
+  
+    const pagesCol = collection(this.firestore, `projects/${projectId}/wiki_pages`);
+    const docRef = await addDoc(pagesCol, {
+      projectId,
+      title,
+      content: `<h1>${title}</h1>`,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    const newPageSnapshot = await getDoc(docRef);
+    const newPageData = newPageSnapshot.data();
+  
+    if (!newPageData) {
+      throw new Error("Failed to create wiki page.");
+    }
+
+    return {
+      id: docRef.id,
+      projectId: newPageData.projectId,
+      title: newPageData.title,
+      content: newPageData.content,
+      createdAt: (newPageData.createdAt as Timestamp)?.toDate().toISOString(),
+      updatedAt: (newPageData.updatedAt as Timestamp)?.toDate().toISOString(),
+    };
+  }
+
+  async updateWikiPage(projectId: string, pageId: string, data: Partial<WikiPage>): Promise<void> {
+    const pageRef = doc(this.firestore, `projects/${projectId}/wiki_pages`, pageId);
+    await updateDoc(pageRef, {
+        ...data,
+        updatedAt: serverTimestamp(),
+    });
+  }
+
+  async deleteWikiPage(projectId: string, pageId: string): Promise<void> {
+    const pageRef = doc(this.firestore, `projects/${projectId}/wiki_pages`, pageId);
+    await deleteDoc(pageRef);
   }
 }
 

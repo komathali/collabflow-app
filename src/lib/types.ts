@@ -70,6 +70,15 @@ export type ProofingComment = {
     userAvatar?: string;
 };
 
+export type WikiPage = {
+    id: string;
+    projectId: string;
+    title: string;
+    content: string; // JSON string
+    createdAt: string;
+    updatedAt: string;
+};
+
 
 export type ActivityLog = {
   id: string;
@@ -109,6 +118,12 @@ export interface IDataService {
   // Proofing
   onProofingComments(documentId: string, callback: (comments: ProofingComment[]) => void): () => void;
   addProofingComment(documentId: string, comment: Omit<ProofingComment, 'id' | 'createdAt' | 'userId' | 'userName' | 'userAvatar'>): Promise<void>;
+
+  // Wiki
+  onWikiPages(projectId: string, callback: (pages: WikiPage[]) => void): () => void;
+  createWikiPage(projectId: string, title: string): Promise<WikiPage>;
+  updateWikiPage(projectId: string, pageId: string, data: Partial<WikiPage>): Promise<void>;
+  deleteWikiPage(projectId: string, pageId: string): Promise<void>;
 }
 
     

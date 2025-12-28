@@ -451,6 +451,41 @@
         "y",
         "content"
       ]
+    },
+    "WikiPage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "WikiPage",
+      "type": "object",
+      "description": "Represents a single wiki or note page within a project.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the WikiPage entity."
+        },
+        "projectId": {
+          "type": "string",
+          "description": "The ID of the project this wiki page belongs to."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the wiki page."
+        },
+        "content": {
+          "type": "string",
+          "description": "The content of the wiki page, stored as a JSON string for Tiptap."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The timestamp when the page was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "The timestamp when the page was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "projectId", "title"]
     }
   },
   "auth": {
@@ -696,9 +731,28 @@
             }
           ]
         }
+      },
+      {
+        "path": "/projects/{projectId}/wiki_pages/{wikiPageId}",
+        "definition": {
+          "entityName": "WikiPage",
+          "schema": {
+            "$ref": "#/backend/entities/WikiPage"
+          },
+          "description": "Stores wiki pages for a project. Access is inherited from the parent project.",
+          "params": [
+            {
+              "name": "projectId",
+              "description": "The unique identifier of the project."
+            },
+            {
+              "name": "wikiPageId",
+              "description": "The unique identifier of the wiki page."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to ensure Authorization Independence, DBAC (Database-Based Access Control), and supports secure `list` operations. The structure emphasizes path-based ownership for private data and membership maps for collaborative data. Denormalization is used extensively to avoid `get()` calls in security rules.\n\n1.  **Users (Private Data):** User data is stored under `/users/{userId}`. This path-based ownership simplifies security rules. Each user has their own document.\n\n2.  **Projects (Collaborative Data):** Projects are stored in `/projects/{projectId}`. The `ownerId` and `memberIds` fields are denormalized to allow rules to authorize actions based on `request.auth.uid` without requiring `get()` calls. A membership map (derived from `ownerId` and `memberIds`) is maintained within the Project document itself to improve list operation security.\n\n3.  **Tasks (Project Subcollection):** Tasks are stored as a subcollection `/projects/{projectId}/tasks/{taskId}`. The `projectId` is included in each task. The `ownerId` and `memberIds` fields from the parent Project document are denormalized into each Task document. This ensures Authorization Independence, allowing tasks to be created and managed without reading the parent Project document.\n\n4.  **Task Comments (Task Subcollection):** To support task-specific discussions, comments are stored in `/projects/{projectId}/tasks/{taskId}/comments/{commentId}`. This structure allows for easy retrieval of all comments for a given task and inherits permissions from the parent project.\n\n5.  **Tags (Project Subcollection):** Tags are stored as a subcollection `/projects/{projectId}/tags/{tagId}`. The `projectId` is included in each tag. The `ownerId` and `memberIds` fields from the parent Project document are denormalized into each Tag document.\n\n6.  **Activity Logs (Collection Group):** Activity logs are stored under `/activity_logs/{activityLogId}`. Each log includes `userId` and `projectId`. Security rules can leverage this information to control access. No denormalization is needed as activity logs will primarily be queried and filtered, not directly authorized for write operations by end-users. List operations are secured using QAPs; access is restricted based on the user's project membership.\n\n7.  **Discussions and Comments (Nested Subcollections):** Discussions are stored in `/projects/{projectId}/discussions/{discussionId}`, and comments are stored in `/projects/{projectId}/discussions/{discussionId}/comments/{commentId}`. This nested structure clearly defines the parent-child relationship and allows for secure and efficient querying. The denormalized authorization context from the Project is present in Discussions and Comments.\n\n8.  **Chat Messages (Project Subcollection):** Real-time chat messages are stored in `/projects/{projectId}/chat_messages/{chatMessageId}`. Denormalizing `senderName` and `senderAvatar` directly in the message document optimizes for read-heavy chat interfaces, avoiding extra user profile lookups for every message displayed. Permissions are based on project membership.\n\n9.  **Time Entries (Task Subcollection):** Time entries are stored in `/projects/{projectId}/tasks/{taskId}/time_entries/{timeEntryId}`. The `projectId` and relevant authorization data from Project (denormalized `ownerId` and `memberIds`) and Task is denormalized into each TimeEntry document. This allows secure operations without reading parent documents.\n\n10. **Sticky Notes (User Subcollection):** Sticky notes are stored in `/users/{userId}/sticky_notes/{stickyNoteId}`. This path-based ownership ensures that only the user can access their own sticky notes.\n\n11. **Proofing Comments (Collection Group):** Proofing comments are stored in `/proofing_comments/{proofingCommentId}`. The proofing comment will contain the `userId` and `projectId`, to be used in security rules.\n\n**Authorization Independence and QAPs:**\n\n*   **Denormalization:** The key to Authorization Independence is the denormalization of `ownerId` and `memberIds` from Project documents into Task, Tag, Discussion, Comment, ChatMessage, and TimeEntry documents. This avoids `get()` calls in security rules and enables atomic operations.\n*   **Structural Segregation:** The use of path-based ownership (e.g., `/users/{userId}/sticky_notes`) ensures that documents with different access requirements are stored in separate collections.\n*   **Membership Maps:** The `memberIds` and `ownerId` fields in the Project documents act as a membership map, allowing rules to check if a user is authorized to access a project and its associated resources.\n*   **Collection Groups:** The use of `/activity_logs` and `/proofing_comments` as top-level collections (collection groups) simplifies querying across all projects. Security is maintained by restricting access based on the denormalized `projectId` and `userId` within each document.  List operations are secured using QAPs; access is restricted based on the user's project membership, which is validated against denormalized project data within the ActivityLog documents."
+    "reasoning": "The Firestore data structure is designed to ensure Authorization Independence, DBAC (Database-Based Access Control), and supports secure `list` operations. The structure emphasizes path-based ownership for private data and membership maps for collaborative data. Denormalization is used extensively to avoid `get()` calls in security rules.\n\n1.  **Users (Private Data):** User data is stored under `/users/{userId}`. This path-based ownership simplifies security rules. Each user has their own document.\n\n2.  **Projects (Collaborative Data):** Projects are stored in `/projects/{projectId}`. The `ownerId` and `memberIds` fields are denormalized to allow rules to authorize actions based on `request.auth.uid` without requiring `get()` calls. A membership map (derived from `ownerId` and `memberIds`) is maintained within the Project document itself to improve list operation security.\n\n3.  **Tasks (Project Subcollection):** Tasks are stored as a subcollection `/projects/{projectId}/tasks/{taskId}`. The `projectId` is included in each task. The `ownerId` and `memberIds` fields from the parent Project document are denormalized into each Task document. This ensures Authorization Independence, allowing tasks to be created and managed without reading the parent Project document.\n\n4.  **Task Comments (Task Subcollection):** To support task-specific discussions, comments are stored in `/projects/{projectId}/tasks/{taskId}/comments/{commentId}`. This structure allows for easy retrieval of all comments for a given task and inherits permissions from the parent project.\n\n5.  **Tags (Project Subcollection):** Tags are stored as a subcollection `/projects/{projectId}/tags/{tagId}`. The `projectId` is included in each tag. The `ownerId` and `memberIds` fields from the parent Project document are denormalized into each Tag document.\n\n6.  **Activity Logs (Collection Group):** Activity logs are stored under `/activity_logs/{activityLogId}`. Each log includes `userId` and `projectId`. Security rules can leverage this information to control access. No denormalization is needed as activity logs will primarily be queried and filtered, not directly authorized for write operations by end-users. List operations are secured using QAPs; access is restricted based on the user's project membership.\n\n7.  **Discussions and Comments (Nested Subcollections):** Discussions are stored in `/projects/{projectId}/discussions/{discussionId}`, and comments are stored in `/projects/{projectId}/discussions/{discussionId}/comments/{commentId}`. This nested structure clearly defines the parent-child relationship and allows for secure and efficient querying. The denormalized authorization context from the Project is present in Discussions and Comments.\n\n8.  **Chat Messages (Project Subcollection):** Real-time chat messages are stored in `/projects/{projectId}/chat_messages/{chatMessageId}`. Denormalizing `senderName` and `senderAvatar` directly in the message document optimizes for read-heavy chat interfaces, avoiding extra user profile lookups for every message displayed. Permissions are based on project membership.\n\n9.  **Time Entries (Task Subcollection):** Time entries are stored in `/projects/{projectId}/tasks/{taskId}/time_entries/{timeEntryId}`. The `projectId` and relevant authorization data from Project (denormalized `ownerId` and `memberIds`) and Task is denormalized into each TimeEntry document. This allows secure operations without reading parent documents.\n\n10. **Sticky Notes (User Subcollection):** Sticky notes are stored in `/users/{userId}/sticky_notes/{stickyNoteId}`. This path-based ownership ensures that only the user can access their own sticky notes.\n\n11. **Proofing Comments (Collection Group):** Proofing comments are stored in `/proofing_comments/{proofingCommentId}`. The proofing comment will contain the `userId` and `projectId`, to be used in security rules.\n\n12. **Wiki Pages (Project Subcollection):** Wiki pages are stored in `/projects/{projectId}/wiki_pages/{wikiPageId}`. This allows for organization of documentation within each project. Access is inherited from the parent project's membership.\n\n**Authorization Independence and QAPs:**\n\n*   **Denormalization:** The key to Authorization Independence is the denormalization of `ownerId` and `memberIds` from Project documents into Task, Tag, Discussion, Comment, ChatMessage, and TimeEntry documents. This avoids `get()` calls in security rules and enables atomic operations.\n*   **Structural Segregation:** The use of path-based ownership (e.g., `/users/{userId}/sticky_notes`) ensures that documents with different access requirements are stored in separate collections.\n*   **Membership Maps:** The `memberIds` and `ownerId` fields in the Project documents act as a membership map, allowing rules to check if a user is authorized to access a project and its associated resources.\n*   **Collection Groups:** The use of `/activity_logs` and `/proofing_comments` as top-level collections (collection groups) simplifies querying across all projects. Security is maintained by restricting access based on the denormalized `projectId` and `userId` within each document.  List operations are secured using QAPs; access is restricted based on the user's project membership, which is validated against denormalized project data within the ActivityLog documents."
   }
 }
-    
